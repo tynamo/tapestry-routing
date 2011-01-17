@@ -6,7 +6,9 @@
 	<name>Tapestry Routing</name>
 	<packaging>jar</packaging>
 	<version>0.0.1-SNAPSHOT</version>
-	<description>...</description>
+	<description>Tapestry Routing allows you to makes pretty, concise and RESTful URLs for your Tapestry pages with no
+		effort.
+	</description>
 
 	<parent>
 		<groupId>org.tynamo</groupId>
@@ -24,7 +26,7 @@
 		<site>
 			<id>tynamo-site</id>
 			<!-- Note the url. Only static files deployed in /constant/ can be decorated by Unity -->
-			<url>dav:https://dav.codehaus.org/tynamo/constant/tapestry-routing</url>
+			<url>dav:https://dav.codehaus.org/tynamo/constant/sites/tapestry-routing</url>
 		</site>
 	</distributionManagement>
 
