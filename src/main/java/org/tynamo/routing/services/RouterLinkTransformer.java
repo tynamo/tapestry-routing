@@ -1,5 +1,6 @@
 package org.tynamo.routing.services;
 
+import org.apache.tapestry5.EventContext;
 import org.apache.tapestry5.Link;
 import org.apache.tapestry5.TapestryConstants;
 import org.apache.tapestry5.internal.services.LinkImpl;
@@ -14,20 +15,22 @@ public class RouterLinkTransformer implements PageRenderLinkTransformer {
 
 	private RouterDispatcher routerDispatcher;
 	private final Request request;
-	private final Response response;
 	private final RequestSecurityManager requestSecurityManager;
-	private final BaseURLSource baseURLSource;
+	private final Response response;
 	private final ContextPathEncoder contextPathEncoder;
-	private static final int BUFFER_SIZE = 100;
-	private static final char SLASH = '/';
+	private final BaseURLSource baseURLSource;
 
-	public RouterLinkTransformer(RouterDispatcher routerDispatcher, Request request, Response response, RequestSecurityManager requestSecurityManager, BaseURLSource baseURLSource, ContextPathEncoder contextPathEncoder) {
+	private static final int BUFFER_SIZE = 100;
+
+	public RouterLinkTransformer(RouterDispatcher routerDispatcher, Request request,
+	                             RequestSecurityManager requestSecurityManager, Response response,
+	                             ContextPathEncoder contextPathEncoder, BaseURLSource baseURLSource) {
 		this.routerDispatcher = routerDispatcher;
 		this.request = request;
-		this.response = response;
 		this.requestSecurityManager = requestSecurityManager;
-		this.baseURLSource = baseURLSource;
+		this.response = response;
 		this.contextPathEncoder = contextPathEncoder;
+		this.baseURLSource = baseURLSource;
 	}
 
 	public PageRenderRequestParameters decodePageRenderRequest(Request request) {
@@ -46,10 +49,9 @@ public class RouterLinkTransformer implements PageRenderLinkTransformer {
 			if (!"".equals(request.getContextPath())) {
 				// Build up the absolute URI.
 				builder.append(request.getContextPath());
-				builder.append(SLASH);
 			}
 
-			builder.append(MessageFormat.format(route.getPathExpression(), parameters.getActivationContext().toStrings()));
+			builder.append(MessageFormat.format(route.getPathExpression(), encode(parameters.getActivationContext())));
 
 			Link link = new LinkImpl(builder.toString(), false, requestSecurityManager.checkPageSecurity(activePageName), response, contextPathEncoder, baseURLSource);
 
@@ -60,5 +62,20 @@ public class RouterLinkTransformer implements PageRenderLinkTransformer {
 		}
 
 		return null;
+	}
+
+	private String[] encode(EventContext context) {
+
+		assert context != null;
+		int count = context.getCount();
+
+		String output[] = new String[count];
+
+		for (int i = 0; i < count; i++) {
+			Object raw = context.get(Object.class, i);
+			output[i] = contextPathEncoder.encodeValue(raw);
+		}
+
+		return output;
 	}
 }

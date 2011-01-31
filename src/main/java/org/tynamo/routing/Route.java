@@ -31,6 +31,13 @@ public class Route {
 		At ann = (At) pageClass.getAnnotation(At.class);
 		if (ann != null) {
 			this.pathExpression = ann.value();
+
+			if (!this.pathExpression.startsWith("/")) {
+				throw new RuntimeException(
+						"ERROR: Expression: \"" + this.pathExpression + "\" in: \"" + this.pageClass.getSimpleName() +
+						"\" page should start with a \"/\"");
+			}
+
 			regex = buildExpression(this.pathExpression);
 			pattern = Pattern.compile(regex);
 		} else {
@@ -39,10 +46,10 @@ public class Route {
 
 	}
 
-	public static String buildExpression(String expresion) {
+	static String buildExpression(String expression) {
 
-		String[] split = URI_PARAM_PATTERN.split(expresion);
-		Matcher withPathParam = URI_PARAM_PATTERN.matcher(expresion);
+		String[] split = URI_PARAM_PATTERN.split(expression);
+		Matcher withPathParam = URI_PARAM_PATTERN.matcher(expression);
 		int i = 0;
 		StringBuffer buffer = new StringBuffer();
 		if (i < split.length) buffer.append(Pattern.quote(split[i++]));
