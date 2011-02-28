@@ -17,16 +17,17 @@ public class Route {
 
 	private static final String URI_PARAM_NAME_REGEX = "\\w[\\w\\.-]*";
 	private static final String URI_PARAM_REGEX_REGEX = "[^{}][^{}]*";
-		private static final String URI_PARAM_REGEX = "\\{\\s*(" + URI_PARAM_NAME_REGEX + ")\\s*(:\\s*(" + URI_PARAM_REGEX_REGEX + "))?\\}";
+	private static final String URI_PARAM_REGEX = "\\{\\s*(" + URI_PARAM_NAME_REGEX + ")\\s*(:\\s*(" + URI_PARAM_REGEX_REGEX + "))?\\}";
 	private static final Pattern URI_PARAM_PATTERN = Pattern.compile(URI_PARAM_REGEX);
 
-	private Class pageClass;
+	private String canonicalizedPageName;
 	private String pathExpression;
 	private String regex;
 	private Pattern pattern;
 
-	public Route(Class pageClass) {
-		this.pageClass = pageClass;
+	public Route(Class pageClass, String canonicalizedPageName) {
+
+		this.canonicalizedPageName = canonicalizedPageName;
 
 		At ann = (At) pageClass.getAnnotation(At.class);
 		if (ann != null) {
@@ -34,7 +35,7 @@ public class Route {
 
 			if (!this.pathExpression.startsWith("/")) {
 				throw new RuntimeException(
-						"ERROR: Expression: \"" + this.pathExpression + "\" in: \"" + this.pageClass.getSimpleName() +
+						"ERROR: Expression: \"" + this.pathExpression + "\" in: \"" + pageClass.getSimpleName() +
 						"\" page should start with a \"/\"");
 			}
 
@@ -70,7 +71,9 @@ public class Route {
 		return buffer.toString();
 	}
 
-	public PageRenderRequestParameters decodePageRenderRequest(Request request, URLEncoder urlEncoder, ContextValueEncoder valueEncoder) {
+	public PageRenderRequestParameters decodePageRenderRequest(final Request request,
+	                                                           final URLEncoder urlEncoder,
+	                                                           final ContextValueEncoder valueEncoder) {
 
 		Matcher matcher = pattern.matcher(request.getPath());
 		if (!matcher.matches()) return null;
@@ -93,7 +96,7 @@ public class Route {
 			context = new URLEventContext(valueEncoder, split);
 		}
 
-		return new PageRenderRequestParameters(pageClass.getSimpleName(), context, false);
+		return new PageRenderRequestParameters(canonicalizedPageName, context, false);
 
 	}
 

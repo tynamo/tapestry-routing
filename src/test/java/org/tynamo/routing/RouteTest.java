@@ -84,7 +84,7 @@ public class RouteTest extends TapestryTestCase {
 
 	@Test
 	public void decodePageRenderRequestTest() {
-		Route route = new Route(SimplePage.class);
+		Route route = new Route(SimplePage.class, SimplePage.class.getSimpleName());
 		Request request = mockRequest();
 
 		expect(request.getPath()).andReturn("/foo/45/bar/24").atLeastOnce();
@@ -157,7 +157,7 @@ public class RouteTest extends TapestryTestCase {
 
 		replay();
 
-		Route route = new Route(pageClass);
+		Route route = new Route(pageClass, pageClass.getSimpleName());
 		PageRenderRequestParameters parameters = route.decodePageRenderRequest(request, urlEncoder, valueEncoder);
 
 		Assert.assertEquals(parameters.getLogicalPageName(), simpleName);

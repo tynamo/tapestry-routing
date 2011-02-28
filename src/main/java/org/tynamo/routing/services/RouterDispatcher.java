@@ -19,7 +19,7 @@ public class RouterDispatcher implements Dispatcher {
 	private final ComponentRequestHandler componentRequestHandler;
 	private final ContextValueEncoder valueEncoder;
 	private final URLEncoder urlEncoder;
-	private final ComponentClassResolver resolver;
+	private final ComponentClassResolver componentClassResolver;
 
 	private List<Class> pages;
 
@@ -32,7 +32,7 @@ public class RouterDispatcher implements Dispatcher {
 		this.valueEncoder = valueEncoder;
 		this.urlEncoder = urlEncoder;
 		this.pages = pages;
-		this.resolver = resolver;
+		this.componentClassResolver = resolver;
 
 		loadRoutes(pages);
 
@@ -47,10 +47,12 @@ public class RouterDispatcher implements Dispatcher {
 			if (clazz.isAnnotationPresent(At.class)) {
 				At ann = (At) clazz.getAnnotation(At.class);
 				if (ann != null) {
-					Route route = new Route(clazz);
+					String canonicalized = componentClassResolver.canonicalizePageName(
+							componentClassResolver.resolvePageClassNameToPageName(clazz.getName()));
+					Route route = new Route(clazz, canonicalized);
 					routes.add(route);
 //					routes.add(clazz.getSimpleName().toLowerCase(), new Route(clazz), ann.order());
-					routeMap.put(resolver.canonicalizePageName(resolver.resolvePageClassNameToPageName(clazz.getName())), route);
+					routeMap.put(canonicalized, route);
 				}
 			}
 		}
