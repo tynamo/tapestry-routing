@@ -7,6 +7,7 @@ import org.apache.tapestry5.ioc.Registry;
 import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.apache.tapestry5.services.*;
 import org.apache.tapestry5.test.TapestryTestCase;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.*;
 import org.tynamo.routing.annotations.At;
@@ -164,7 +165,7 @@ public class RouteTest extends TapestryTestCase {
 		Assert.assertEquals(parameters.getActivationContext().getCount(), activationContextCount);
 
 		RouterDispatcher routerDispatcher =
-				new RouterDispatcher(null, null, null, classResolver, Arrays.asList((Class) pageClass));
+				new RouterDispatcher(null, null, null, classResolver, LoggerFactory.getLogger(RouteTest.class), Arrays.asList((Class) pageClass));
 		RouterLinkTransformer linkTransformer =
 				new RouterLinkTransformer(routerDispatcher, request, securityManager, response, contextPathEncoder,
 				                          null);
