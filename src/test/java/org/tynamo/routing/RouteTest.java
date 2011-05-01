@@ -1,19 +1,27 @@
 package org.tynamo.routing;
 
-import org.apache.tapestry5.annotations.Property;
+import org.apache.tapestry5.internal.EmptyEventContext;
 import org.apache.tapestry5.internal.services.LinkSecurity;
 import org.apache.tapestry5.internal.services.RequestSecurityManager;
 import org.apache.tapestry5.ioc.Registry;
 import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.apache.tapestry5.services.*;
 import org.apache.tapestry5.test.TapestryTestCase;
+import org.easymock.EasyMock;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.*;
-import org.tynamo.routing.annotations.At;
+import org.tynamo.routing.pages.Home;
+import org.tynamo.routing.pages.SimplePage;
+import org.tynamo.routing.pages.SubFolderHome;
+import org.tynamo.routing.pages.subpackage.SubPackageMain;
+import org.tynamo.routing.pages.subpackage.SubPage;
+import org.tynamo.routing.pages.subpackage.SubPageFirst;
 import org.tynamo.routing.services.RouterDispatcher;
 import org.tynamo.routing.services.RouterLinkTransformer;
+import org.tynamo.routing.services.TestModule;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,10 +39,12 @@ public class RouteTest extends TapestryTestCase {
 		RegistryBuilder builder = new RegistryBuilder();
 
 		builder.add(TapestryModule.class);
+		builder.add(TestModule.class);
 
 		registry = builder.build();
 
 		registry.performRegistryStartup();
+
 	}
 
 	@AfterSuite
@@ -61,7 +71,7 @@ public class RouteTest extends TapestryTestCase {
 	}
 
 	@Test
-	public void testRegularExpressions() {
+	public void regular_expressions() {
 
 		String path = "/foo/52";
 
@@ -84,7 +94,7 @@ public class RouteTest extends TapestryTestCase {
 	}
 
 	@Test
-	public void decodePageRenderRequestTest() {
+	public void decode_page_render_request() {
 		Route route = new Route(SimplePage.class, SimplePage.class.getSimpleName());
 		Request request = mockRequest();
 
@@ -102,45 +112,89 @@ public class RouteTest extends TapestryTestCase {
 	}
 
 	@Test
-	public void homeWithContext() {
-
-		testLinkGeneration("/myapp/", Home.class, "/", "/myapp", 0);
+	public void home() {
+		testPageRenderLinkGeneration("/", Home.class, "/", "", 0);
 	}
 
 	@Test
-	public void subfolderListingWithContext() {
-		testLinkGeneration("/myapp/subfolder/", SubFolderHome.class, "/subfolder/", "/myapp", 0);
+	public void home_with_context() {
+		testPageRenderLinkGeneration("/myapp/", Home.class, "/", "/myapp", 0);
 	}
 
 	@Test
-	public void homeWithoutContext() {
-
-		testLinkGeneration("/", Home.class, "/", "", 0);
+	public void subfolder_listing() {
+		testPageRenderLinkGeneration("/subfolder/", SubFolderHome.class, "/subfolder/", "", 0);
 	}
 
 	@Test
-	public void subfolderListingWithoutContext() {
-
-		testLinkGeneration("/subfolder/", SubFolderHome.class, "/subfolder/", "", 0);
-
+	public void subfolder_listing_with_context() {
+		testPageRenderLinkGeneration("/myapp/subfolder/", SubFolderHome.class, "/subfolder/", "/myapp", 0);
 	}
 
 	@Test
-	public void simplePageWithContext() {
-
-		testLinkGeneration("/myapp/foo/45/bar/24", SimplePage.class, "/foo/45/bar/24", "/myapp", 2);
+	public void simplepage() {
+		testPageRenderLinkGeneration("/foo/45/bar/24", SimplePage.class, "/foo/45/bar/24", "", 2);
 
 	}
 
 	@Test
-	public void simplePageWithoutContext() {
-		testLinkGeneration("/foo/45/bar/24", SimplePage.class, "/foo/45/bar/24", "", 2);
-
+	public void simplepage_with_context() {
+		testPageRenderLinkGeneration("/myapp/foo/45/bar/24", SimplePage.class, "/foo/45/bar/24", "/myapp", 2);
 	}
 
-	private void testLinkGeneration(String expectedURI, Class pageClass, String requestPath, String contextPath,
-	                                int activationContextCount) {
-		String simpleName = pageClass.getSimpleName();
+	@Test
+	public void subpackage() {
+		testPageRenderLinkGeneration("/subpackage/inventedpath", SubPage.class, "/subpackage/inventedpath", "", 0);
+	}
+
+	@Test
+	public void subpackage_with_package_prefix() {
+		testPageRenderLinkGeneration("/subpackage", SubPackageMain.class, "/subpackage", "", 0);
+	}
+
+	@Test
+	public void order() throws IOException {
+
+		Class[] processOrder = {SubPage.class, SubPageFirst.class};
+		Class first = SubPageFirst.class;
+		String requestPath = "/subpackage/inventedpath";
+
+		ComponentClassResolver classResolver = getService(ComponentClassResolver.class);
+		String logical = classResolver.resolvePageClassNameToPageName(first.getName());
+		String canonicalized = classResolver.canonicalizePageName(logical);
+
+		Request request = mockRequest();
+		expect(request.getPath()).andReturn(requestPath).atLeastOnce();
+
+		PageRenderRequestParameters expectedParameters = new PageRenderRequestParameters(canonicalized, new EmptyEventContext(), false);
+
+		ComponentRequestHandler requestHandler = mockComponentRequestHandler();
+
+		requestHandler.handlePageRender(expectedParameters);
+
+		RouterDispatcher routerDispatcher = new RouterDispatcher(requestHandler,
+		                                                         null,
+		                                                         null,
+		                                                         classResolver,
+		                                                         LoggerFactory.getLogger(RouteTest.class),
+		                                                         Arrays.asList(processOrder));
+
+		replay();
+
+		routerDispatcher.dispatch(request, null);
+
+		verify();
+	}
+
+	private void testPageRenderLinkGeneration(String expectedURI,
+	                                          Class pageClass,
+	                                          String requestPath,
+	                                          String contextPath,
+	                                          int activationContextCount) {
+
+		ComponentClassResolver classResolver = getService(ComponentClassResolver.class);
+		String logical = classResolver.resolvePageClassNameToPageName(pageClass.getName());
+		String canonicalized = classResolver.canonicalizePageName(logical);
 
 		Request request = mockRequest();
 		expect(request.getPath()).andReturn(requestPath).atLeastOnce();
@@ -150,53 +204,22 @@ public class RouteTest extends TapestryTestCase {
 		train_encodeURL(response, expectedURI, expectedURI);
 
 		RequestSecurityManager securityManager = newMock(RequestSecurityManager.class);
-		expect(securityManager.checkPageSecurity(simpleName)).andReturn(LinkSecurity.INSECURE);
-
-		ComponentClassResolver classResolver = mockComponentClassResolver();
-		expect(classResolver.resolvePageClassNameToPageName(pageClass.getName())).andReturn(simpleName.toLowerCase());
-		expect(classResolver.canonicalizePageName(simpleName.toLowerCase())).andReturn(simpleName);
+		expect(securityManager.checkPageSecurity(logical)).andReturn(LinkSecurity.INSECURE);
 
 		replay();
 
-		Route route = new Route(pageClass, pageClass.getSimpleName());
+		Route route = new Route(pageClass, canonicalized);
 		PageRenderRequestParameters parameters = route.decodePageRenderRequest(request, urlEncoder, valueEncoder);
 
-		Assert.assertEquals(parameters.getLogicalPageName(), simpleName);
+		Assert.assertEquals(parameters.getLogicalPageName(), logical);
 		Assert.assertEquals(parameters.getActivationContext().getCount(), activationContextCount);
 
 		RouterDispatcher routerDispatcher =
-				new RouterDispatcher(null, null, null, classResolver, LoggerFactory.getLogger(RouteTest.class), Arrays.asList((Class) pageClass));
+				new RouterDispatcher(null, null, null, classResolver, LoggerFactory.getLogger(RouteTest.class), Arrays.asList(pageClass));
 		RouterLinkTransformer linkTransformer =
 				new RouterLinkTransformer(routerDispatcher, request, securityManager, response, contextPathEncoder,
 				                          null);
 
 		Assert.assertEquals(linkTransformer.transformPageRenderLink(null, parameters).toURI(), expectedURI);
 	}
-
-
-	@At("/foo/{0}/bar/{1}")
-	class SimplePage {
-
-		@Property
-		private String message;
-
-		protected void onActivate(String message0, String message1) throws Exception {
-			this.message = message0 + " - " + message1;
-		}
-	}
-
-	@At("/")
-	class Home {
-
-		protected void onActivate() {
-		}
-	}
-
-	@At("/subfolder/")
-	class SubFolderHome {
-
-		protected void onActivate() {
-		}
-	}
-
 }
