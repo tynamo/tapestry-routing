@@ -7,7 +7,6 @@ import org.apache.tapestry5.ioc.Registry;
 import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.apache.tapestry5.services.*;
 import org.apache.tapestry5.test.TapestryTestCase;
-import org.easymock.EasyMock;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.*;
@@ -19,6 +18,7 @@ import org.tynamo.routing.pages.subpackage.SubPage;
 import org.tynamo.routing.pages.subpackage.SubPageFirst;
 import org.tynamo.routing.services.RouterDispatcher;
 import org.tynamo.routing.services.RouterLinkTransformer;
+import org.tynamo.routing.services.RoutingModule;
 import org.tynamo.routing.services.TestModule;
 
 import java.io.IOException;
@@ -39,6 +39,7 @@ public class RouteTest extends TapestryTestCase {
 		RegistryBuilder builder = new RegistryBuilder();
 
 		builder.add(TapestryModule.class);
+		builder.add(RoutingModule.class);
 		builder.add(TestModule.class);
 
 		registry = builder.build();
@@ -68,6 +69,12 @@ public class RouteTest extends TapestryTestCase {
 		urlEncoder = getService(URLEncoder.class);
 		valueEncoder = getService(ContextValueEncoder.class);
 		contextPathEncoder = getService(ContextPathEncoder.class);
+	}
+
+	@Test
+	public void auto_discovery_disbled_only_one_contributed_service() {
+		RouterDispatcher dispatcher = getService(RouterDispatcher.class);
+		Assert.assertEquals(dispatcher.getRouteMap().size(), 1, "there is only one contributed service, autodiscovery is disabled");
 	}
 
 	@Test

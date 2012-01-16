@@ -7,6 +7,7 @@ import org.tynamo.routing.Route;
 import org.tynamo.routing.annotations.At;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,14 +24,14 @@ public class RouterDispatcher implements Dispatcher {
 	private final ComponentClassResolver componentClassResolver;
 	private final Logger logger;
 
-	private List<Class> pages;
+	private Collection<Class> pages;
 
 	private List<Route> routes;
 	private Map<String, Route> routeMap;
 
 	public RouterDispatcher(ComponentRequestHandler componentRequestHandler, ContextValueEncoder valueEncoder,
 	                        URLEncoder urlEncoder, ComponentClassResolver componentClassResolver, Logger logger,
-	                        List<Class> pages)
+	                        Collection<Class> pages)
 	{
 		this.componentRequestHandler = componentRequestHandler;
 		this.valueEncoder = valueEncoder;
@@ -43,7 +44,7 @@ public class RouterDispatcher implements Dispatcher {
 
 	}
 
-	private void loadRoutes(List<Class> pages) {
+	private void loadRoutes(Collection<Class> pages) {
 
 		Orderer<Route> orderer = new Orderer<Route>(logger);
 		routeMap = new HashMap<String, Route>();
