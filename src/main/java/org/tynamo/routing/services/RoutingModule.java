@@ -6,22 +6,23 @@ import org.apache.tapestry5.ioc.MappedConfiguration;
 import org.apache.tapestry5.ioc.OrderedConfiguration;
 import org.apache.tapestry5.ioc.ServiceBinder;
 import org.apache.tapestry5.ioc.annotations.Contribute;
-import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.ioc.annotations.Primary;
 import org.apache.tapestry5.ioc.annotations.Symbol;
 import org.apache.tapestry5.ioc.services.ClassNameLocator;
 import org.apache.tapestry5.ioc.services.FactoryDefaults;
 import org.apache.tapestry5.ioc.services.SymbolProvider;
+import org.apache.tapestry5.services.ComponentClassResolver;
 import org.apache.tapestry5.services.Dispatcher;
 import org.apache.tapestry5.services.linktransform.PageRenderLinkTransformer;
+import org.tynamo.routing.Route;
 import org.tynamo.routing.RoutingSymbols;
 import org.tynamo.routing.annotations.At;
 
 public class RoutingModule {
 
 	public static void bind(ServiceBinder binder) {
-
 		binder.bind(RouterDispatcher.class);
+		binder.bind(AnnotatedPagesManager.class, AnnotatedPagesManagerImpl.class);
 	}
 
 	@Contribute(PageRenderLinkTransformer.class)
@@ -35,10 +36,27 @@ public class RoutingModule {
 	}
 
 	@Contribute(RouterDispatcher.class)
-	public static void contributeRouterDispatcher(Configuration<Class> configuration,
-	                                              @Symbol(InternalSymbols.APP_PACKAGE_PATH) String appPackagePath,
-	                                              @Symbol(RoutingSymbols.DISABLE_AUTODISCOVERY) Boolean preventScan,
-	                                              ClassNameLocator classNameLocator) {
+	public static void loadRoutesFromAnnotatedPages(OrderedConfiguration<Route> configuration, AnnotatedPagesManager manager, ComponentClassResolver componentClassResolver) {
+
+		for (Class clazz : manager.getPages()) {
+			if (clazz.isAnnotationPresent(At.class)) {
+				At ann = (At) clazz.getAnnotation(At.class);
+				if (ann != null) {
+					String canonicalized = componentClassResolver.canonicalizePageName(
+							componentClassResolver.resolvePageClassNameToPageName(clazz.getName()));
+					String pathExpression = ann.value();
+					Route route = new Route(pathExpression, canonicalized);
+					configuration.add(clazz.getSimpleName().toLowerCase(), route, ann.order());
+				}
+			}
+		}
+	}
+
+	@Contribute(AnnotatedPagesManager.class)
+	public static void searchForAnnotatedPages(Configuration<Class> configuration,
+	                                           @Symbol(InternalSymbols.APP_PACKAGE_PATH) String appPackagePath,
+	                                           @Symbol(RoutingSymbols.DISABLE_AUTODISCOVERY) Boolean preventScan,
+	                                           ClassNameLocator classNameLocator) {
 
 		if (!preventScan) {
 			ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();

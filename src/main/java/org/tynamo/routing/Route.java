@@ -7,7 +7,6 @@ import org.apache.tapestry5.services.ContextValueEncoder;
 import org.apache.tapestry5.services.PageRenderRequestParameters;
 import org.apache.tapestry5.services.Request;
 import org.apache.tapestry5.services.URLEncoder;
-import org.tynamo.routing.annotations.At;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,28 +21,22 @@ public class Route {
 
 	private String canonicalizedPageName;
 	private String pathExpression;
-	private String regex;
 	private Pattern pattern;
 
-	public Route(Class pageClass, String canonicalizedPageName) {
+	public Route(String pathExpression, String canonicalizedPageName) {
 
 		this.canonicalizedPageName = canonicalizedPageName;
 
-		At ann = (At) pageClass.getAnnotation(At.class);
-		if (ann != null) {
-			this.pathExpression = ann.value();
+		this.pathExpression = pathExpression;
 
-			if (!this.pathExpression.startsWith("/")) {
-				throw new RuntimeException(
-						"ERROR: Expression: \"" + this.pathExpression + "\" in: \"" + pageClass.getSimpleName() +
-						"\" page should start with a \"/\"");
-			}
-
-			regex = buildExpression(this.pathExpression);
-			pattern = Pattern.compile(regex);
-		} else {
-			throw new RuntimeException("Something went wrong!. Where is the @At annotation?");
+		if (!this.pathExpression.startsWith("/")) {
+			throw new RuntimeException(
+					"ERROR: Expression: \"" + this.pathExpression + "\" in: \"" + canonicalizedPageName +
+							"\" page should start with a \"/\"");
 		}
+
+		String regex = buildExpression(this.pathExpression);
+		pattern = Pattern.compile(regex);
 
 	}
 
@@ -102,5 +95,9 @@ public class Route {
 
 	public String getPathExpression() {
 		return pathExpression;
+	}
+
+	public String getCanonicalizedPageName() {
+		return canonicalizedPageName;
 	}
 }

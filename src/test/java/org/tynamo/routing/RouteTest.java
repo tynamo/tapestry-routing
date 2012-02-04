@@ -5,24 +5,26 @@ import org.apache.tapestry5.internal.services.LinkSecurity;
 import org.apache.tapestry5.internal.services.RequestSecurityManager;
 import org.apache.tapestry5.ioc.Registry;
 import org.apache.tapestry5.ioc.RegistryBuilder;
+import org.apache.tapestry5.ioc.internal.util.Orderer;
 import org.apache.tapestry5.services.*;
 import org.apache.tapestry5.test.TapestryTestCase;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.*;
+import org.tynamo.routing.annotations.At;
 import org.tynamo.routing.pages.Home;
 import org.tynamo.routing.pages.SimplePage;
 import org.tynamo.routing.pages.SubFolderHome;
 import org.tynamo.routing.pages.subpackage.SubPackageMain;
 import org.tynamo.routing.pages.subpackage.SubPage;
 import org.tynamo.routing.pages.subpackage.SubPageFirst;
-import org.tynamo.routing.services.RouterDispatcher;
-import org.tynamo.routing.services.RouterLinkTransformer;
-import org.tynamo.routing.services.RoutingModule;
-import org.tynamo.routing.services.TestModule;
+import org.tynamo.routing.pages.subpackage.UnannotatedPage;
+import org.tynamo.routing.services.*;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,7 +42,7 @@ public class RouteTest extends TapestryTestCase {
 
 		builder.add(TapestryModule.class);
 		builder.add(RoutingModule.class);
-		builder.add(TestModule.class);
+		builder.add(TestsModule.class);
 
 		registry = builder.build();
 
@@ -72,12 +74,6 @@ public class RouteTest extends TapestryTestCase {
 	}
 
 	@Test
-	public void auto_discovery_disbled_only_one_contributed_service() {
-		RouterDispatcher dispatcher = getService(RouterDispatcher.class);
-		Assert.assertEquals(dispatcher.getRouteMap().size(), 1, "there is only one contributed service, autodiscovery is disabled");
-	}
-
-	@Test
 	public void regular_expressions() {
 
 		String path = "/foo/52";
@@ -102,7 +98,7 @@ public class RouteTest extends TapestryTestCase {
 
 	@Test
 	public void decode_page_render_request() {
-		Route route = new Route(SimplePage.class, SimplePage.class.getSimpleName());
+		Route route = new Route(SimplePage.class.getAnnotation(At.class).value(), SimplePage.class.getSimpleName());
 		Request request = mockRequest();
 
 		expect(request.getPath()).andReturn("/foo/45/bar/24").atLeastOnce();
@@ -141,7 +137,6 @@ public class RouteTest extends TapestryTestCase {
 	@Test
 	public void simplepage() {
 		testPageRenderLinkGeneration("/foo/45/bar/24", SimplePage.class, "/foo/45/bar/24", "", 2);
-
 	}
 
 	@Test
@@ -157,6 +152,11 @@ public class RouteTest extends TapestryTestCase {
 	@Test
 	public void subpackage_with_package_prefix() {
 		testPageRenderLinkGeneration("/subpackage", SubPackageMain.class, "/subpackage", "", 0);
+	}
+
+	@Test
+	public void link_to_unannotatedpage() {
+		testPageRenderLinkGeneration("/not/annotated/parameter", UnannotatedPage.class, "/not/annotated/parameter", "", 1);
 	}
 
 	@Test
@@ -180,11 +180,9 @@ public class RouteTest extends TapestryTestCase {
 		requestHandler.handlePageRender(expectedParameters);
 
 		RouterDispatcher routerDispatcher = new RouterDispatcher(requestHandler,
-		                                                         null,
-		                                                         null,
-		                                                         classResolver,
-		                                                         LoggerFactory.getLogger(RouteTest.class),
-		                                                         Arrays.asList(processOrder));
+				null,
+				null,
+				getRoutesFromPages(Arrays.asList(processOrder), classResolver));
 
 		replay();
 
@@ -215,18 +213,38 @@ public class RouteTest extends TapestryTestCase {
 
 		replay();
 
-		Route route = new Route(pageClass, canonicalized);
+		RouterDispatcher routerDispatcher = getService(RouterDispatcher.class);
+		Route route = routerDispatcher.getRoute(canonicalized);
+
 		PageRenderRequestParameters parameters = route.decodePageRenderRequest(request, urlEncoder, valueEncoder);
 
 		Assert.assertEquals(parameters.getLogicalPageName(), logical);
 		Assert.assertEquals(parameters.getActivationContext().getCount(), activationContextCount);
 
-		RouterDispatcher routerDispatcher =
-				new RouterDispatcher(null, null, null, classResolver, LoggerFactory.getLogger(RouteTest.class), Arrays.asList(pageClass));
 		RouterLinkTransformer linkTransformer =
-				new RouterLinkTransformer(routerDispatcher, request, securityManager, response, contextPathEncoder,
-				                          null);
+				new RouterLinkTransformer(routerDispatcher, request, securityManager, response, contextPathEncoder, null);
 
 		Assert.assertEquals(linkTransformer.transformPageRenderLink(null, parameters).toURI(), expectedURI);
 	}
+
+	private static List<Route> getRoutesFromPages(Collection<Class> pages,
+	                                              ComponentClassResolver componentClassResolver) {
+
+		Orderer<Route> orderer = new Orderer<Route>(LoggerFactory.getLogger(RoutingModule.class));
+
+		for (Class clazz : pages) {
+			if (clazz.isAnnotationPresent(At.class)) {
+				At ann = (At) clazz.getAnnotation(At.class);
+				if (ann != null) {
+					String canonicalized = componentClassResolver.canonicalizePageName(
+							componentClassResolver.resolvePageClassNameToPageName(clazz.getName()));
+					String pathExpression = ann.value();
+					Route route = new Route(pathExpression, canonicalized);
+					orderer.add(clazz.getSimpleName().toLowerCase(), route, ann.order());
+				}
+			}
+		}
+		return orderer.getOrdered();
+	}
+
 }

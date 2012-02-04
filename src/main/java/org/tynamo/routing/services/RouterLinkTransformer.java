@@ -41,7 +41,7 @@ public class RouterLinkTransformer implements PageRenderLinkTransformer {
 
 		String activePageName = parameters.getLogicalPageName();
 
-		Route route = routerDispatcher.getRouteMap().get(activePageName);
+		Route route = routerDispatcher.getRoute(activePageName);
 
 		if (route != null) {
 			StringBuilder builder = new StringBuilder(BUFFER_SIZE);
