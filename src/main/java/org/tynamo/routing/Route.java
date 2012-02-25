@@ -45,23 +45,23 @@ public class Route {
 		String[] split = URI_PARAM_PATTERN.split(expression);
 		Matcher withPathParam = URI_PARAM_PATTERN.matcher(expression);
 		int i = 0;
-		StringBuffer buffer = new StringBuffer();
-		if (i < split.length) buffer.append(Pattern.quote(split[i++]));
+		StringBuilder builder = new StringBuilder();
+		if (i < split.length) builder.append(Pattern.quote(split[i++]));
 
 		while (withPathParam.find()) {
 			String expr = withPathParam.group(3);
-			buffer.append("(");
+			builder.append("(");
 			if (expr == null) {
-				buffer.append("[^/]+");
+				builder.append("[^/]+");
 			} else {
 				throw new RuntimeException("regular expression mappings are not yet supported");
 			}
 
-			buffer.append(")");
-			if (i < split.length) buffer.append(Pattern.quote(split[i++]));
+			builder.append(")");
+			if (i < split.length) builder.append(Pattern.quote(split[i++]));
 		}
 
-		return buffer.toString();
+		return builder.toString();
 	}
 
 	public PageRenderRequestParameters decodePageRenderRequest(final Request request,
