@@ -46,7 +46,7 @@ public class RoutingModule {
 							componentClassResolver.resolvePageClassNameToPageName(clazz.getName()));
 					String pathExpression = ann.value();
 					Route route = new Route(pathExpression, canonicalized);
-					configuration.add(clazz.getSimpleName().toLowerCase(), route, ann.order());
+					configuration.add(canonicalized.toLowerCase(), route, ann.order());
 				}
 			}
 		}

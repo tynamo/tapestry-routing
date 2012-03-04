@@ -227,6 +227,8 @@ public class RouteTest extends TapestryTestCase {
 		Assert.assertEquals(linkTransformer.transformPageRenderLink(null, parameters).toURI(), expectedURI);
 	}
 
+
+	// #todo remove this code, find a way to test RoutingModule.loadRoutesFromAnnotatedPages
 	private static List<Route> getRoutesFromPages(Collection<Class> pages,
 	                                              ComponentClassResolver componentClassResolver) {
 
@@ -240,7 +242,7 @@ public class RouteTest extends TapestryTestCase {
 							componentClassResolver.resolvePageClassNameToPageName(clazz.getName()));
 					String pathExpression = ann.value();
 					Route route = new Route(pathExpression, canonicalized);
-					orderer.add(clazz.getSimpleName().toLowerCase(), route, ann.order());
+					orderer.add(canonicalized.toLowerCase(), route, ann.order());
 				}
 			}
 		}

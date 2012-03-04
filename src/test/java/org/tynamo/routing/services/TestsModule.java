@@ -20,6 +20,7 @@ public class TestsModule {
 
 	@Contribute(RouterDispatcher.class)
 	public static void addRoutes(OrderedConfiguration<Route> configuration) {
-		configuration.add("UnannotatedPage", new Route("/not/annotated/{0}", "subpackage/UnannotatedPage"));
+		String canonicalized = "subpackage/UnannotatedPage";
+		configuration.add(canonicalized.toLowerCase(), new Route("/not/annotated/{0}", canonicalized));
 	}
 }
