@@ -1,5 +1,6 @@
 package org.tynamo.routing.services;
 
+import org.apache.tapestry5.SymbolConstants;
 import org.apache.tapestry5.internal.InternalSymbols;
 import org.apache.tapestry5.ioc.Configuration;
 import org.apache.tapestry5.ioc.MappedConfiguration;
@@ -36,16 +37,31 @@ public class RoutingModule {
 	}
 
 	@Contribute(RouterDispatcher.class)
-	public static void loadRoutesFromAnnotatedPages(OrderedConfiguration<Route> configuration, AnnotatedPagesManager manager, ComponentClassResolver componentClassResolver) {
+	public static void loadRoutesFromAnnotatedPages(OrderedConfiguration<Route> configuration,
+	                                                AnnotatedPagesManager manager,
+	                                                ComponentClassResolver componentClassResolver,
+	                                                @Symbol(SymbolConstants.APPLICATION_FOLDER) String applicationFolder) {
+
+		String folder = applicationFolder.equals("") ? "" : "/" + applicationFolder;
 
 		for (Class clazz : manager.getPages()) {
 			if (clazz.isAnnotationPresent(At.class)) {
 				At ann = (At) clazz.getAnnotation(At.class);
 				if (ann != null) {
+
 					String canonicalized = componentClassResolver.canonicalizePageName(
 							componentClassResolver.resolvePageClassNameToPageName(clazz.getName()));
+
 					String pathExpression = ann.value();
-					Route route = new Route(pathExpression, canonicalized);
+
+					if (!pathExpression.startsWith("/")) {
+						throw new RuntimeException(
+								"ERROR: Expression: \"" + pathExpression + "\" in: \"" + canonicalized +
+										"\" page should start with a \"/\"");
+					}
+
+					Route route = new Route(folder + pathExpression, canonicalized);
+
 					configuration.add(canonicalized.toLowerCase(), route, ann.order());
 				}
 			}
