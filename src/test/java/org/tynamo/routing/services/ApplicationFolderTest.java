@@ -26,7 +26,7 @@ public class ApplicationFolderTest extends TapestryTestCase {
 
 		registry.performRegistryStartup();
 
-		testPageRenderLinkGeneration(registry, "/myapp/t5/", Home.class, "/t5/", "/myapp", 0);
+		testPageRenderLinkGeneration(registry, "/myapp/t5", Home.class, "/t5/", "/myapp", 0);
 
 		registry.cleanupThread();
 		registry.shutdown();
