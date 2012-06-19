@@ -11,7 +11,6 @@ import org.apache.tapestry5.services.URLEncoder;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
 public class Route {
 
 	private static final String URI_PARAM_NAME_REGEX = "\\w[\\w\\.-]*";
@@ -27,8 +26,9 @@ public class Route {
 
 		this.canonicalizedPageName = canonicalizedPageName;
 
-		this.pathExpression = pathExpression;
-
+		// remove ending slash unless it's the root path
+		this.pathExpression = pathExpression.length() > 1 && pathExpression.charAt(pathExpression.length()-1) == '/' ? pathExpression.substring(0, pathExpression.length()-1) : pathExpression;
+		
 		if (!this.pathExpression.startsWith("/")) {
 			throw new RuntimeException(
 					"ERROR: Expression: \"" + this.pathExpression + "\" in: \"" + canonicalizedPageName +
@@ -68,7 +68,8 @@ public class Route {
 	                                                           final URLEncoder urlEncoder,
 	                                                           final ContextValueEncoder valueEncoder) {
 
-		Matcher matcher = pattern.matcher(request.getPath());
+		// remove ending slash unless it's the root path
+		Matcher matcher = pattern.matcher(request.getPath().length() > 1 && request.getPath().charAt(request.getPath().length()-1) == '/' ? request.getPath().substring(0, request.getPath().length()-1) : request.getPath());
 		if (!matcher.matches()) return null;
 
 		EventContext context;

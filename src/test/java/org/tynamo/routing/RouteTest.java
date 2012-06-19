@@ -1,16 +1,35 @@
 package org.tynamo.routing;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.tapestry5.internal.EmptyEventContext;
 import org.apache.tapestry5.internal.services.LinkSecurity;
 import org.apache.tapestry5.internal.services.RequestSecurityManager;
 import org.apache.tapestry5.ioc.Registry;
 import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.apache.tapestry5.ioc.internal.util.Orderer;
-import org.apache.tapestry5.services.*;
+import org.apache.tapestry5.services.ComponentClassResolver;
+import org.apache.tapestry5.services.ComponentRequestHandler;
+import org.apache.tapestry5.services.ContextPathEncoder;
+import org.apache.tapestry5.services.ContextValueEncoder;
+import org.apache.tapestry5.services.PageRenderRequestParameters;
+import org.apache.tapestry5.services.Request;
+import org.apache.tapestry5.services.Response;
+import org.apache.tapestry5.services.TapestryModule;
+import org.apache.tapestry5.services.URLEncoder;
 import org.apache.tapestry5.test.TapestryTestCase;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.annotations.*;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.AfterSuite;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeSuite;
+import org.testng.annotations.Test;
 import org.tynamo.routing.annotations.At;
 import org.tynamo.routing.pages.Home;
 import org.tynamo.routing.pages.SimplePage;
@@ -19,14 +38,10 @@ import org.tynamo.routing.pages.subpackage.SubPackageMain;
 import org.tynamo.routing.pages.subpackage.SubPage;
 import org.tynamo.routing.pages.subpackage.SubPageFirst;
 import org.tynamo.routing.pages.subpackage.UnannotatedPage;
-import org.tynamo.routing.services.*;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.tynamo.routing.services.RouterDispatcher;
+import org.tynamo.routing.services.RouterLinkTransformer;
+import org.tynamo.routing.services.RoutingModule;
+import org.tynamo.routing.services.TestsModule;
 
 
 public class RouteTest extends TapestryTestCase {
@@ -126,12 +141,16 @@ public class RouteTest extends TapestryTestCase {
 
 	@Test
 	public void subfolder_listing() {
-		testPageRenderLinkGeneration("/subfolder/", SubFolderHome.class, "/subfolder/", "", 0);
+		testPageRenderLinkGeneration("/subfolder", SubFolderHome.class, "/subfolder/", "", 0);
+	}
+	@Test
+	public void subfolder_listing_without_last_slash() {
+		testPageRenderLinkGeneration("/subfolder", SubFolderHome.class, "/subfolder", "", 0);
 	}
 
 	@Test
 	public void subfolder_listing_with_context() {
-		testPageRenderLinkGeneration("/myapp/subfolder/", SubFolderHome.class, "/subfolder/", "/myapp", 0);
+		testPageRenderLinkGeneration("/myapp/subfolder", SubFolderHome.class, "/subfolder/", "/myapp", 0);
 	}
 
 	@Test
