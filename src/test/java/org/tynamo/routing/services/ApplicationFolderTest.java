@@ -4,6 +4,7 @@ import org.apache.tapestry5.internal.services.LinkSecurity;
 import org.apache.tapestry5.internal.services.RequestSecurityManager;
 import org.apache.tapestry5.ioc.Registry;
 import org.apache.tapestry5.ioc.RegistryBuilder;
+import org.apache.tapestry5.ioc.services.ThreadLocale;
 import org.apache.tapestry5.services.*;
 import org.apache.tapestry5.test.TapestryTestCase;
 import org.testng.Assert;
@@ -44,6 +45,8 @@ public class ApplicationFolderTest extends TapestryTestCase {
 		URLEncoder urlEncoder = registry.getService(URLEncoder.class);
 		ContextValueEncoder valueEncoder = registry.getService(ContextValueEncoder.class);
 		ContextPathEncoder contextPathEncoder = registry.getService(ContextPathEncoder.class);
+		LocalizationSetter localizationSetter = registry.getService(LocalizationSetter.class);
+		ThreadLocale threadLocale = registry.getService(ThreadLocale.class);
 
 
 		ComponentClassResolver classResolver = registry.getService(ComponentClassResolver.class);
@@ -70,8 +73,8 @@ public class ApplicationFolderTest extends TapestryTestCase {
 		Assert.assertEquals(parameters.getLogicalPageName(), logical);
 		Assert.assertEquals(parameters.getActivationContext().getCount(), activationContextCount);
 
-		RouterLinkTransformer linkTransformer =
-				new RouterLinkTransformer(routerDispatcher, request, securityManager, response, contextPathEncoder, null);
+		RouterLinkTransformer linkTransformer = new RouterLinkTransformer(routerDispatcher, request, securityManager,
+			response, contextPathEncoder, null, localizationSetter, threadLocale);
 
 		Assert.assertEquals(linkTransformer.transformPageRenderLink(null, parameters).toURI(), expectedURI);
 	}

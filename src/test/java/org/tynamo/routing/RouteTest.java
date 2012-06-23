@@ -7,16 +7,20 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.tapestry5.SymbolConstants;
 import org.apache.tapestry5.internal.EmptyEventContext;
 import org.apache.tapestry5.internal.services.LinkSecurity;
 import org.apache.tapestry5.internal.services.RequestSecurityManager;
 import org.apache.tapestry5.ioc.Registry;
 import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.apache.tapestry5.ioc.internal.util.Orderer;
+import org.apache.tapestry5.ioc.services.SymbolSource;
+import org.apache.tapestry5.ioc.services.ThreadLocale;
 import org.apache.tapestry5.services.ComponentClassResolver;
 import org.apache.tapestry5.services.ComponentRequestHandler;
 import org.apache.tapestry5.services.ContextPathEncoder;
 import org.apache.tapestry5.services.ContextValueEncoder;
+import org.apache.tapestry5.services.LocalizationSetter;
 import org.apache.tapestry5.services.PageRenderRequestParameters;
 import org.apache.tapestry5.services.Request;
 import org.apache.tapestry5.services.Response;
@@ -50,6 +54,8 @@ public class RouteTest extends TapestryTestCase {
 	private URLEncoder urlEncoder;
 	private ContextValueEncoder valueEncoder;
 	private ContextPathEncoder contextPathEncoder;
+	private ThreadLocale threadLocale;
+	private static LocalizationSetter localizationSetter;
 
 	@BeforeSuite
 	public final void setup_registry() {
@@ -86,6 +92,8 @@ public class RouteTest extends TapestryTestCase {
 		urlEncoder = getService(URLEncoder.class);
 		valueEncoder = getService(ContextValueEncoder.class);
 		contextPathEncoder = getService(ContextPathEncoder.class);
+		localizationSetter = getService(LocalizationSetter.class);
+		threadLocale = getService(ThreadLocale.class);
 	}
 
 	@Test
@@ -113,7 +121,8 @@ public class RouteTest extends TapestryTestCase {
 
 	@Test
 	public void decode_page_render_request() {
-		Route route = new Route(SimplePage.class.getAnnotation(At.class).value(), SimplePage.class.getSimpleName());
+		Route route = new Route(SimplePage.class.getAnnotation(At.class).value(), SimplePage.class.getSimpleName(),
+			localizationSetter);
 		Request request = mockRequest();
 
 		expect(request.getPath()).andReturn("/foo/45/bar/24").atLeastOnce();
@@ -135,14 +144,30 @@ public class RouteTest extends TapestryTestCase {
 	}
 
 	@Test
+	public void home_with_locale() {
+		testPageRenderLinkGeneration("/fi/", Home.class, "/fi/", "", 0);
+	}
+
+	@Test
 	public void home_with_context() {
 		testPageRenderLinkGeneration("/myapp/", Home.class, "/", "/myapp", 0);
+	}
+
+	@Test
+	public void home_with_context_and_locale() {
+		testPageRenderLinkGeneration("/myapp/fi/", Home.class, "/fi/", "/myapp", 0);
 	}
 
 	@Test
 	public void subfolder_listing() {
 		testPageRenderLinkGeneration("/subfolder", SubFolderHome.class, "/subfolder/", "", 0);
 	}
+
+	@Test
+	public void subfolder_listing_with_locale() {
+		testPageRenderLinkGeneration("/fi/subfolder", SubFolderHome.class, "/fi/subfolder/", "", 0);
+	}
+
 	@Test
 	public void subfolder_listing_without_last_slash() {
 		testPageRenderLinkGeneration("/subfolder", SubFolderHome.class, "/subfolder", "", 0);
@@ -240,8 +265,8 @@ public class RouteTest extends TapestryTestCase {
 		Assert.assertEquals(parameters.getLogicalPageName(), logical);
 		Assert.assertEquals(parameters.getActivationContext().getCount(), activationContextCount);
 
-		RouterLinkTransformer linkTransformer =
-				new RouterLinkTransformer(routerDispatcher, request, securityManager, response, contextPathEncoder, null);
+		RouterLinkTransformer linkTransformer = new RouterLinkTransformer(routerDispatcher, request, securityManager,
+			response, contextPathEncoder, null, localizationSetter, threadLocale);
 
 		Assert.assertEquals(linkTransformer.transformPageRenderLink(null, parameters).toURI(), expectedURI);
 	}
@@ -260,7 +285,7 @@ public class RouteTest extends TapestryTestCase {
 					String canonicalized = componentClassResolver.canonicalizePageName(
 							componentClassResolver.resolvePageClassNameToPageName(clazz.getName()));
 					String pathExpression = ann.value();
-					Route route = new Route(pathExpression, canonicalized);
+					Route route = new Route(pathExpression, canonicalized, localizationSetter);
 					orderer.add(canonicalized.toLowerCase(), route, ann.order());
 				}
 			}

@@ -4,6 +4,7 @@ import org.apache.tapestry5.EventContext;
 import org.apache.tapestry5.internal.EmptyEventContext;
 import org.apache.tapestry5.internal.URLEventContext;
 import org.apache.tapestry5.services.ContextValueEncoder;
+import org.apache.tapestry5.services.LocalizationSetter;
 import org.apache.tapestry5.services.PageRenderRequestParameters;
 import org.apache.tapestry5.services.Request;
 import org.apache.tapestry5.services.URLEncoder;
@@ -21,9 +22,10 @@ public class Route {
 	private String canonicalizedPageName;
 	private String pathExpression;
 	private Pattern pattern;
+	private LocalizationSetter localizationSetter;
 
-	public Route(String pathExpression, String canonicalizedPageName) {
-
+	public Route(String pathExpression, String canonicalizedPageName, LocalizationSetter localizationSetter) {
+		this.localizationSetter = localizationSetter;
 		this.canonicalizedPageName = canonicalizedPageName;
 
 		// remove ending slash unless it's the root path
@@ -64,12 +66,35 @@ public class Route {
 		return builder.toString();
 	}
 
+	private String getLocaleFromPath(String path) {
+		// we have to get the possibly encoded locale from the request
+		// the following was copied and modified from AppPageRenderLinkTransformer.decodePageRenderRequest(...)
+		String[] split = path.substring(1).split("/");
+		if (split.length > 0 && !"".equals(split[0])) {
+			String possibleLocaleName = split[0];
+			// Might be just the page activation context, or it might be locale then page
+			// activation context
+			return localizationSetter.isSupportedLocaleName(possibleLocaleName) ? possibleLocaleName : null;
+		}
+		return null;
+	}
+
+	public String getLocalelessPath(final Request request) {
+		String path = request.getPath();
+		String locale = getLocaleFromPath(path);
+		if (locale != null) {
+			localizationSetter.setLocaleFromLocaleName(locale);
+			path = path.substring(locale.length() + 1);
+		}
+		return path.length() > 1 && path.charAt(path.length() - 1) == '/' ? path.substring(0, path.length() - 1) : path;
+	}
+
 	public PageRenderRequestParameters decodePageRenderRequest(final Request request,
 	                                                           final URLEncoder urlEncoder,
 	                                                           final ContextValueEncoder valueEncoder) {
 
 		// remove ending slash unless it's the root path
-		Matcher matcher = pattern.matcher(request.getPath().length() > 1 && request.getPath().charAt(request.getPath().length()-1) == '/' ? request.getPath().substring(0, request.getPath().length()-1) : request.getPath());
+		Matcher matcher = pattern.matcher(getLocalelessPath(request));
 		if (!matcher.matches()) return null;
 
 		EventContext context;

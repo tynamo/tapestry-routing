@@ -14,6 +14,7 @@ import org.apache.tapestry5.ioc.services.FactoryDefaults;
 import org.apache.tapestry5.ioc.services.SymbolProvider;
 import org.apache.tapestry5.services.ComponentClassResolver;
 import org.apache.tapestry5.services.Dispatcher;
+import org.apache.tapestry5.services.LocalizationSetter;
 import org.apache.tapestry5.services.linktransform.PageRenderLinkTransformer;
 import org.tynamo.routing.Route;
 import org.tynamo.routing.RoutingSymbols;
@@ -38,9 +39,8 @@ public class RoutingModule {
 
 	@Contribute(RouterDispatcher.class)
 	public static void loadRoutesFromAnnotatedPages(OrderedConfiguration<Route> configuration,
-	                                                AnnotatedPagesManager manager,
-	                                                ComponentClassResolver componentClassResolver,
-	                                                @Symbol(SymbolConstants.APPLICATION_FOLDER) String applicationFolder) {
+		AnnotatedPagesManager manager, ComponentClassResolver componentClassResolver,
+		LocalizationSetter localizationSetter, @Symbol(SymbolConstants.APPLICATION_FOLDER) String applicationFolder) {
 
 		String folder = applicationFolder.equals("") ? "" : "/" + applicationFolder;
 
@@ -60,7 +60,7 @@ public class RoutingModule {
 										"\" page should start with a \"/\"");
 					}
 
-					Route route = new Route(folder + pathExpression, canonicalized);
+					Route route = new Route(folder + pathExpression, canonicalized, localizationSetter);
 
 					configuration.add(canonicalized.toLowerCase(), route, ann.order());
 				}
