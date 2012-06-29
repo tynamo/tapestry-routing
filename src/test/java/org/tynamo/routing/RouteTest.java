@@ -7,14 +7,12 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.tapestry5.SymbolConstants;
 import org.apache.tapestry5.internal.EmptyEventContext;
 import org.apache.tapestry5.internal.services.LinkSecurity;
 import org.apache.tapestry5.internal.services.RequestSecurityManager;
 import org.apache.tapestry5.ioc.Registry;
 import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.apache.tapestry5.ioc.internal.util.Orderer;
-import org.apache.tapestry5.ioc.services.SymbolSource;
 import org.apache.tapestry5.ioc.services.ThreadLocale;
 import org.apache.tapestry5.services.ComponentClassResolver;
 import org.apache.tapestry5.services.ComponentRequestHandler;
@@ -226,7 +224,8 @@ public class RouteTest extends TapestryTestCase {
 		RouterDispatcher routerDispatcher = new RouterDispatcher(requestHandler,
 				null,
 				null,
-				getRoutesFromPages(Arrays.asList(processOrder), classResolver));
+				getRoutesFromPages(Arrays.asList(processOrder), classResolver),
+				LoggerFactory.getLogger(RouterDispatcher.class));
 
 		replay();
 

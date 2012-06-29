@@ -3,6 +3,7 @@ package org.tynamo.routing.services;
 import org.apache.tapestry5.annotations.Log;
 import org.apache.tapestry5.ioc.annotations.UsesConfiguration;
 import org.apache.tapestry5.services.*;
+import org.slf4j.Logger;
 import org.tynamo.routing.Route;
 
 import java.io.IOException;
@@ -20,16 +21,18 @@ public class RouterDispatcher implements Dispatcher {
 	private final ComponentRequestHandler componentRequestHandler;
 	private final ContextValueEncoder valueEncoder;
 	private final URLEncoder urlEncoder;
+    private Logger logger;
 
 	private List<Route> routes;
 	private Map<String, Route> routeMap;
 
 	public RouterDispatcher(ComponentRequestHandler componentRequestHandler, ContextValueEncoder valueEncoder,
-	                        URLEncoder urlEncoder, List<Route> routes) {
+	                        URLEncoder urlEncoder, List<Route> routes, Logger logger) {
 		this.componentRequestHandler = componentRequestHandler;
 		this.valueEncoder = valueEncoder;
 		this.urlEncoder = urlEncoder;
 		this.routes = routes;
+		this.logger = logger;
 
 		routeMap = buildMap(routes);
 
@@ -49,6 +52,7 @@ public class RouterDispatcher implements Dispatcher {
 		for (Route route : routes) {
 			PageRenderRequestParameters parameters = route.decodePageRenderRequest(request, urlEncoder, valueEncoder);
 			if (parameters != null) {
+				if (logger.isDebugEnabled()) logger.debug("routing using route: \"" + route.getPathExpression() + "\" for page: " + route.getCanonicalizedPageName());
 				componentRequestHandler.handlePageRender(parameters);
 				return true;
 			}
