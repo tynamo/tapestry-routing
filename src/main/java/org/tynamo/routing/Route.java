@@ -1,8 +1,10 @@
 package org.tynamo.routing;
 
 import org.apache.tapestry5.EventContext;
+import org.apache.tapestry5.SymbolConstants;
 import org.apache.tapestry5.internal.EmptyEventContext;
 import org.apache.tapestry5.internal.URLEventContext;
+import org.apache.tapestry5.ioc.annotations.Symbol;
 import org.apache.tapestry5.services.ContextValueEncoder;
 import org.apache.tapestry5.services.LocalizationSetter;
 import org.apache.tapestry5.services.PageRenderRequestParameters;
@@ -23,10 +25,13 @@ public class Route {
 	private String pathExpression;
 	private Pattern pattern;
 	private LocalizationSetter localizationSetter;
+	private boolean encodeLocaleIntoPath;
 
-	public Route(String pathExpression, String canonicalizedPageName, LocalizationSetter localizationSetter) {
+	public Route(String pathExpression, String canonicalizedPageName, LocalizationSetter localizationSetter,
+		@Symbol(SymbolConstants.ENCODE_LOCALE_INTO_PATH) boolean encodeLocaleIntoPath) {
 		this.localizationSetter = localizationSetter;
 		this.canonicalizedPageName = canonicalizedPageName;
+		this.encodeLocaleIntoPath = encodeLocaleIntoPath;
 
 		// remove ending slash unless it's the root path
 		this.pathExpression = pathExpression.length() > 1 && pathExpression.charAt(pathExpression.length()-1) == '/' ? pathExpression.substring(0, pathExpression.length()-1) : pathExpression;
@@ -67,6 +72,7 @@ public class Route {
 	}
 
 	private String getLocaleFromPath(String path) {
+		if (!encodeLocaleIntoPath) return null;
 		// we have to get the possibly encoded locale from the request
 		// the following was copied and modified from AppPageRenderLinkTransformer.decodePageRenderRequest(...)
 		String[] split = path.substring(1).split("/");

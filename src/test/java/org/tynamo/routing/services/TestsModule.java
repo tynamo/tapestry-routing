@@ -6,6 +6,7 @@ import org.apache.tapestry5.internal.InternalSymbols;
 import org.apache.tapestry5.ioc.MappedConfiguration;
 import org.apache.tapestry5.ioc.OrderedConfiguration;
 import org.apache.tapestry5.ioc.annotations.Contribute;
+import org.apache.tapestry5.ioc.annotations.Symbol;
 import org.apache.tapestry5.ioc.services.ApplicationDefaults;
 import org.apache.tapestry5.ioc.services.SymbolProvider;
 import org.apache.tapestry5.services.LocalizationSetter;
@@ -22,9 +23,11 @@ public class TestsModule {
 	}
 
 	@Contribute(RouterDispatcher.class)
-	public static void addRoutes(OrderedConfiguration<Route> configuration, LocalizationSetter localizationSetter) {
+	public static void addRoutes(OrderedConfiguration<Route> configuration, LocalizationSetter localizationSetter,
+		@Symbol(SymbolConstants.ENCODE_LOCALE_INTO_PATH) boolean encodeLocaleIntoPath) {
 		String canonicalized = "subpackage/UnannotatedPage";
-		configuration.add(canonicalized.toLowerCase(), new Route("/not/annotated/{0}", canonicalized, localizationSetter));
+		configuration.add(canonicalized.toLowerCase(), new Route("/not/annotated/{0}", canonicalized, localizationSetter,
+			encodeLocaleIntoPath));
 	}
 	
 }

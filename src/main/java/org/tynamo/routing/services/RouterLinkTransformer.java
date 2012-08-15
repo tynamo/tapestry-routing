@@ -2,9 +2,11 @@ package org.tynamo.routing.services;
 
 import org.apache.tapestry5.EventContext;
 import org.apache.tapestry5.Link;
+import org.apache.tapestry5.SymbolConstants;
 import org.apache.tapestry5.TapestryConstants;
 import org.apache.tapestry5.internal.services.LinkImpl;
 import org.apache.tapestry5.internal.services.RequestSecurityManager;
+import org.apache.tapestry5.ioc.annotations.Symbol;
 import org.apache.tapestry5.ioc.services.ThreadLocale;
 import org.apache.tapestry5.services.*;
 import org.apache.tapestry5.services.linktransform.PageRenderLinkTransformer;
@@ -24,10 +26,12 @@ public class RouterLinkTransformer implements PageRenderLinkTransformer {
 	private static final int BUFFER_SIZE = 100;
 	private ThreadLocale threadLocale;
 	private LocalizationSetter localizationSetter;
+	private boolean encodeLocaleIntoPath;
 
 	public RouterLinkTransformer(RouterDispatcher routerDispatcher, Request request,
 		RequestSecurityManager requestSecurityManager, Response response, ContextPathEncoder contextPathEncoder,
-		BaseURLSource baseURLSource, LocalizationSetter localizationSetter, ThreadLocale threadLocale) {
+		BaseURLSource baseURLSource, LocalizationSetter localizationSetter, ThreadLocale threadLocale,
+		@Symbol(SymbolConstants.ENCODE_LOCALE_INTO_PATH) boolean encodeLocaleIntoPath) {
 		this.routerDispatcher = routerDispatcher;
 		this.request = request;
 		this.requestSecurityManager = requestSecurityManager;
@@ -36,6 +40,7 @@ public class RouterLinkTransformer implements PageRenderLinkTransformer {
 		this.baseURLSource = baseURLSource;
 		this.localizationSetter = localizationSetter;
 		this.threadLocale = threadLocale;
+		this.encodeLocaleIntoPath = encodeLocaleIntoPath;
 	}
 
 	public PageRenderRequestParameters decodePageRenderRequest(Request request) {
@@ -56,12 +61,13 @@ public class RouterLinkTransformer implements PageRenderLinkTransformer {
 				builder.append(request.getContextPath());
 			}
 
-			if (threadLocale.getLocale() != null
+			if (encodeLocaleIntoPath && threadLocale.getLocale() != null
 				&& !localizationSetter.getSupportedLocales().get(0).equals(threadLocale.getLocale())) {
 				builder.append("/");
 				builder.append(threadLocale.getLocale().toString());
 			}
-			builder.append(MessageFormat.format(route.getPathExpression(), encode(parameters.getActivationContext())));
+			builder.append(MessageFormat.format(route.getPathExpression(),
+				(Object[]) encode(parameters.getActivationContext())));
 
 			Link link = new LinkImpl(builder.toString(), false, requestSecurityManager.checkPageSecurity(activePageName), response, contextPathEncoder, baseURLSource);
 

@@ -120,7 +120,7 @@ public class RouteTest extends TapestryTestCase {
 	@Test
 	public void decode_page_render_request() {
 		Route route = new Route(SimplePage.class.getAnnotation(At.class).value(), SimplePage.class.getSimpleName(),
-			localizationSetter);
+			localizationSetter, true);
 		Request request = mockRequest();
 
 		expect(request.getPath()).andReturn("/foo/45/bar/24").atLeastOnce();
@@ -164,6 +164,11 @@ public class RouteTest extends TapestryTestCase {
 	@Test
 	public void subfolder_listing_with_locale() {
 		testPageRenderLinkGeneration("/fi/subfolder", SubFolderHome.class, "/fi/subfolder/", "", 0);
+	}
+
+	@Test
+	public void subfolder_listing_with_locale_path_encoding_off() {
+		testPageRenderLinkGeneration("/fi/subfolder", SubFolderHome.class, "/fi/subfolder/", "", 0, false);
 	}
 
 	@Test
@@ -234,11 +239,13 @@ public class RouteTest extends TapestryTestCase {
 		verify();
 	}
 
-	private void testPageRenderLinkGeneration(String expectedURI,
-	                                          Class pageClass,
-	                                          String requestPath,
-	                                          String contextPath,
-	                                          int activationContextCount) {
+	private void testPageRenderLinkGeneration(String expectedURI, Class pageClass, String requestPath,
+		String contextPath, int activationContextCount) {
+		testPageRenderLinkGeneration(expectedURI, pageClass, requestPath, contextPath, activationContextCount, true);
+	}
+
+	private void testPageRenderLinkGeneration(String expectedURI, Class pageClass, String requestPath,
+		String contextPath, int activationContextCount, boolean encodeLocaleIntoPath) {
 
 		ComponentClassResolver classResolver = getService(ComponentClassResolver.class);
 		String logical = classResolver.resolvePageClassNameToPageName(pageClass.getName());
@@ -265,7 +272,7 @@ public class RouteTest extends TapestryTestCase {
 		Assert.assertEquals(parameters.getActivationContext().getCount(), activationContextCount);
 
 		RouterLinkTransformer linkTransformer = new RouterLinkTransformer(routerDispatcher, request, securityManager,
-			response, contextPathEncoder, null, localizationSetter, threadLocale);
+			response, contextPathEncoder, null, localizationSetter, threadLocale, true);
 
 		Assert.assertEquals(linkTransformer.transformPageRenderLink(null, parameters).toURI(), expectedURI);
 	}
@@ -284,7 +291,7 @@ public class RouteTest extends TapestryTestCase {
 					String canonicalized = componentClassResolver.canonicalizePageName(
 							componentClassResolver.resolvePageClassNameToPageName(clazz.getName()));
 					String pathExpression = ann.value();
-					Route route = new Route(pathExpression, canonicalized, localizationSetter);
+					Route route = new Route(pathExpression, canonicalized, localizationSetter, true);
 					orderer.add(canonicalized.toLowerCase(), route, ann.order());
 				}
 			}

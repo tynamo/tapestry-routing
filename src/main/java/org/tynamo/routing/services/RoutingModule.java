@@ -40,7 +40,8 @@ public class RoutingModule {
 	@Contribute(RouterDispatcher.class)
 	public static void loadRoutesFromAnnotatedPages(OrderedConfiguration<Route> configuration,
 		AnnotatedPagesManager manager, ComponentClassResolver componentClassResolver,
-		LocalizationSetter localizationSetter, @Symbol(SymbolConstants.APPLICATION_FOLDER) String applicationFolder) {
+		LocalizationSetter localizationSetter, @Symbol(SymbolConstants.APPLICATION_FOLDER) String applicationFolder,
+		@Symbol(SymbolConstants.ENCODE_LOCALE_INTO_PATH) boolean encodeLocaleIntoPath) {
 
 		String folder = applicationFolder.equals("") ? "" : "/" + applicationFolder;
 
@@ -60,7 +61,7 @@ public class RoutingModule {
 										"\" page should start with a \"/\"");
 					}
 
-					Route route = new Route(folder + pathExpression, canonicalized, localizationSetter);
+					Route route = new Route(folder + pathExpression, canonicalized, localizationSetter, encodeLocaleIntoPath);
 
 					configuration.add(canonicalized.toLowerCase(), route, ann.order());
 				}

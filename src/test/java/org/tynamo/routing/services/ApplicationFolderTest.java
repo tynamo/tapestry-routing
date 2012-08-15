@@ -74,7 +74,7 @@ public class ApplicationFolderTest extends TapestryTestCase {
 		Assert.assertEquals(parameters.getActivationContext().getCount(), activationContextCount);
 
 		RouterLinkTransformer linkTransformer = new RouterLinkTransformer(routerDispatcher, request, securityManager,
-			response, contextPathEncoder, null, localizationSetter, threadLocale);
+			response, contextPathEncoder, null, localizationSetter, threadLocale, true);
 
 		Assert.assertEquals(linkTransformer.transformPageRenderLink(null, parameters).toURI(), expectedURI);
 	}
