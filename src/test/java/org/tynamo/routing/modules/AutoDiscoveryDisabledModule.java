@@ -1,4 +1,4 @@
-package org.tynamo.routing.services;
+package org.tynamo.routing.modules;
 
 import org.apache.tapestry5.ioc.Configuration;
 import org.apache.tapestry5.ioc.MappedConfiguration;
@@ -8,6 +8,7 @@ import org.apache.tapestry5.ioc.services.ApplicationDefaults;
 import org.apache.tapestry5.ioc.services.SymbolProvider;
 import org.tynamo.routing.RoutingSymbols;
 import org.tynamo.routing.pages.SimplePage;
+import org.tynamo.routing.services.AnnotatedPagesManager;
 
 @SubModule(TestsModule.class)
 public class AutoDiscoveryDisabledModule {

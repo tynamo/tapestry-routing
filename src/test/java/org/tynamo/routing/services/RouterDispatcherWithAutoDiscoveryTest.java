@@ -6,9 +6,11 @@ import org.apache.tapestry5.services.TapestryModule;
 import org.apache.tapestry5.test.TapestryTestCase;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import org.tynamo.routing.modules.AutoDiscoveryDisabledModule;
+import org.tynamo.routing.modules.TestsModule;
 
 
-public class AutoDiscoveryTest extends TapestryTestCase {
+public class RouterDispatcherWithAutoDiscoveryTest extends TapestryTestCase {
 
 	@Test
 	public void auto_discovery_enabled() {
@@ -32,7 +34,7 @@ public class AutoDiscoveryTest extends TapestryTestCase {
 	}
 
 	@Test
-	public void auto_discovery_disbled_only_one_contributed_service() {
+	public void auto_discovery_disabled_only_one_contributed_service() {
 
 		RegistryBuilder builder = new RegistryBuilder();
 

@@ -1,4 +1,4 @@
-package org.tynamo.routing.services;
+package org.tynamo.routing.modules;
 
 import org.apache.tapestry5.SymbolConstants;
 import org.apache.tapestry5.internal.InternalConstants;
@@ -11,6 +11,7 @@ import org.apache.tapestry5.ioc.services.ApplicationDefaults;
 import org.apache.tapestry5.ioc.services.SymbolProvider;
 import org.apache.tapestry5.services.LocalizationSetter;
 import org.tynamo.routing.Route;
+import org.tynamo.routing.services.RouterDispatcher;
 
 public class TestsModule {
 

@@ -1,43 +1,61 @@
-package org.tynamo.routing.services;
+package org.tynamo.routing;
 
 import org.apache.tapestry5.SymbolConstants;
 import org.apache.tapestry5.internal.services.LinkSecurity;
 import org.apache.tapestry5.internal.services.RequestSecurityManager;
 import org.apache.tapestry5.ioc.Registry;
 import org.apache.tapestry5.ioc.RegistryBuilder;
-import org.apache.tapestry5.ioc.services.SymbolProvider;
 import org.apache.tapestry5.ioc.services.SymbolSource;
-import org.apache.tapestry5.ioc.services.ThreadLocale;
 import org.apache.tapestry5.services.*;
 import org.apache.tapestry5.test.TapestryTestCase;
 import org.testng.Assert;
-import org.testng.annotations.*;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
 import org.tynamo.routing.Route;
-import org.tynamo.routing.pages.Home;
-import org.tynamo.routing.pages.SubFolderHome;
+import org.tynamo.routing.services.RouterDispatcher;
+import org.tynamo.routing.services.RouterLinkTransformer;
+import org.tynamo.routing.services.RoutingModule;
 
-public class ApplicationFolderTest extends TapestryTestCase {
+public abstract class RoutingTestCase extends TapestryTestCase {
 
-	private static Registry registry;
+	protected Registry registry;
+	protected URLEncoder urlEncoder;
+	protected ContextValueEncoder valueEncoder;
+	protected ContextPathEncoder contextPathEncoder;
+	protected LocalizationSetter localizationSetter;
+	protected PersistentLocale persistentLocale;
+	protected SymbolSource symbolSource;
+	protected ComponentClassResolver classResolver;
+	protected RouterDispatcher routerDispatcher;
 
-	@BeforeSuite
+	protected abstract void addAdditionalModules(RegistryBuilder builder);
+
+	@BeforeClass
 	public final void setup_registry() {
 		RegistryBuilder builder = new RegistryBuilder();
 
 		builder.add(TapestryModule.class);
 		builder.add(RoutingModule.class);
-		builder.add(ApplicationFolderModule.class);
+
+		addAdditionalModules(builder);
 
 		registry = builder.build();
-
 		registry.performRegistryStartup();
 
+		urlEncoder = getService(URLEncoder.class);
+		valueEncoder = getService(ContextValueEncoder.class);
+		contextPathEncoder = getService(ContextPathEncoder.class);
+		localizationSetter = getService(LocalizationSetter.class);
+		persistentLocale = getService(PersistentLocale.class);
+		symbolSource = registry.getService(SymbolSource.class);
+		classResolver = registry.getService(ComponentClassResolver.class);
+		routerDispatcher = registry.getService(RouterDispatcher.class);
 	}
 
-	@AfterSuite
+	@AfterClass
 	public final void shutdown_registry() {
 		registry.shutdown();
-
 		registry = null;
 	}
 
@@ -50,29 +68,16 @@ public class ApplicationFolderTest extends TapestryTestCase {
 		return registry.getService(serviceInterface);
 	}
 
-	@Test
-	public void auto_discovery_enabled() {
-		testPageRenderLinkGeneration(registry, "/myapp/t5", Home.class, "/t5/", "/myapp", 0);
-	}
-
-	public void testPageRenderLinkGeneration(Registry registry,
-	                                         String expectedURI,
+	public void testPageRenderLinkGeneration(String expectedURI,
 	                                         Class pageClass,
 	                                         String requestPath,
 	                                         String contextPath,
 	                                         int activationContextCount) {
 
-		SymbolSource symbolSource = registry.getService(SymbolSource.class);
 
 		boolean encodeLocaleIntoPath = Boolean.parseBoolean(symbolSource.valueForSymbol(SymbolConstants.ENCODE_LOCALE_INTO_PATH));
 		String applicationFolder = symbolSource.valueForSymbol(SymbolConstants.APPLICATION_FOLDER);
 
-		URLEncoder urlEncoder = registry.getService(URLEncoder.class);
-		ContextValueEncoder valueEncoder = registry.getService(ContextValueEncoder.class);
-		ContextPathEncoder contextPathEncoder = registry.getService(ContextPathEncoder.class);
-		PersistentLocale persistentLocale = registry.getService(PersistentLocale.class);
-
-		ComponentClassResolver classResolver = registry.getService(ComponentClassResolver.class);
 		String logical = classResolver.resolvePageClassNameToPageName(pageClass.getName());
 		String canonicalized = classResolver.canonicalizePageName(logical);
 
@@ -88,7 +93,6 @@ public class ApplicationFolderTest extends TapestryTestCase {
 
 		replay();
 
-		RouterDispatcher routerDispatcher = registry.getService(RouterDispatcher.class);
 		Route route = routerDispatcher.getRoute(canonicalized);
 
 		PageRenderRequestParameters parameters = route.decodePageRenderRequest(request, urlEncoder, valueEncoder);

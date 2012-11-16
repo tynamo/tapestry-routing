@@ -1,16 +1,13 @@
 package org.tynamo.routing;
 
+import org.apache.tapestry5.SymbolConstants;
 import org.apache.tapestry5.internal.EmptyEventContext;
-import org.apache.tapestry5.internal.services.LinkSecurity;
-import org.apache.tapestry5.internal.services.RequestSecurityManager;
-import org.apache.tapestry5.ioc.Registry;
 import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.apache.tapestry5.ioc.internal.util.Orderer;
 import org.apache.tapestry5.services.*;
-import org.apache.tapestry5.test.TapestryTestCase;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.annotations.*;
+import org.testng.annotations.Test;
 import org.tynamo.routing.annotations.At;
 import org.tynamo.routing.pages.Home;
 import org.tynamo.routing.pages.SimplePage;
@@ -20,9 +17,8 @@ import org.tynamo.routing.pages.subpackage.SubPage;
 import org.tynamo.routing.pages.subpackage.SubPageFirst;
 import org.tynamo.routing.pages.subpackage.UnannotatedPage;
 import org.tynamo.routing.services.RouterDispatcher;
-import org.tynamo.routing.services.RouterLinkTransformer;
 import org.tynamo.routing.services.RoutingModule;
-import org.tynamo.routing.services.TestsModule;
+import org.tynamo.routing.modules.TestsModule;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -32,52 +28,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public class RouteTest extends TapestryTestCase {
+public class RouteTest extends RoutingTestCase {
 
-	private static Registry registry;
-	private URLEncoder urlEncoder;
-	private ContextValueEncoder valueEncoder;
-	private ContextPathEncoder contextPathEncoder;
-	private LocalizationSetter localizationSetter;
-	private PersistentLocale persistentLocale;
-
-	@BeforeSuite
-	public final void setup_registry() {
-		RegistryBuilder builder = new RegistryBuilder();
-
-		builder.add(TapestryModule.class);
-		builder.add(RoutingModule.class);
+	@Override
+	protected void addAdditionalModules(RegistryBuilder builder) {
 		builder.add(TestsModule.class);
-
-		registry = builder.build();
-
-		registry.performRegistryStartup();
-
-	}
-
-	@AfterSuite
-	public final void shutdown_registry() {
-		registry.shutdown();
-
-		registry = null;
-	}
-
-	@AfterMethod
-	public final void cleanupThread() {
-		registry.cleanupThread();
-	}
-
-	public final <T> T getService(Class<T> serviceInterface) {
-		return registry.getService(serviceInterface);
-	}
-
-	@BeforeClass
-	public void setup() {
-		urlEncoder = getService(URLEncoder.class);
-		valueEncoder = getService(ContextValueEncoder.class);
-		contextPathEncoder = getService(ContextPathEncoder.class);
-		localizationSetter = getService(LocalizationSetter.class);
-		persistentLocale = getService(PersistentLocale.class);
 	}
 
 	@Test
@@ -213,11 +168,12 @@ public class RouteTest extends TapestryTestCase {
 
 		requestHandler.handlePageRender(expectedParameters);
 
-		RouterDispatcher routerDispatcher = new RouterDispatcher(requestHandler,
-				null,
-				null,
-				getRoutesFromPages(Arrays.asList(processOrder), classResolver, localizationSetter),
-				LoggerFactory.getLogger(RouterDispatcher.class));
+		boolean encodeLocaleIntoPath = Boolean.parseBoolean(symbolSource.valueForSymbol(SymbolConstants.ENCODE_LOCALE_INTO_PATH));
+		String applicationFolder = symbolSource.valueForSymbol(SymbolConstants.APPLICATION_FOLDER);
+
+		List<Route> routes = getRoutesFromPages(Arrays.asList(processOrder), classResolver, localizationSetter, encodeLocaleIntoPath, applicationFolder);
+
+		RouterDispatcher routerDispatcher = new RouterDispatcher(requestHandler, null, null, routes, LoggerFactory.getLogger(RouterDispatcher.class));
 
 		replay();
 
@@ -226,49 +182,12 @@ public class RouteTest extends TapestryTestCase {
 		verify();
 	}
 
-	private void testPageRenderLinkGeneration(String expectedURI, Class pageClass, String requestPath,
-		String contextPath, int activationContextCount) {
-		testPageRenderLinkGeneration(expectedURI, pageClass, requestPath, contextPath, activationContextCount, true);
-	}
-
-	public void testPageRenderLinkGeneration(String expectedURI, Class pageClass, String requestPath,
-		String contextPath, int activationContextCount, boolean encodeLocaleIntoPath) {
-
-		ComponentClassResolver classResolver = getService(ComponentClassResolver.class);
-		String logical = classResolver.resolvePageClassNameToPageName(pageClass.getName());
-		String canonicalized = classResolver.canonicalizePageName(logical);
-
-		Request request = mockRequest();
-		expect(request.getPath()).andReturn(requestPath).atLeastOnce();
-		expect(request.getContextPath()).andReturn(contextPath).atLeastOnce();
-
-		Response response = mockResponse();
-		train_encodeURL(response, expectedURI, expectedURI);
-
-		RequestSecurityManager securityManager = newMock(RequestSecurityManager.class);
-		expect(securityManager.checkPageSecurity(logical)).andReturn(LinkSecurity.INSECURE);
-
-		replay();
-
-		RouterDispatcher routerDispatcher = getService(RouterDispatcher.class);
-		Route route = routerDispatcher.getRoute(canonicalized);
-
-		PageRenderRequestParameters parameters = route.decodePageRenderRequest(request, urlEncoder, valueEncoder);
-
-		Assert.assertEquals(parameters.getLogicalPageName(), logical);
-		Assert.assertEquals(parameters.getActivationContext().getCount(), activationContextCount);
-
-		RouterLinkTransformer linkTransformer = new RouterLinkTransformer(routerDispatcher, request, securityManager,
-			response, contextPathEncoder, null, persistentLocale, encodeLocaleIntoPath, "");
-
-		Assert.assertEquals(linkTransformer.transformPageRenderLink(null, parameters).toURI(), expectedURI);
-	}
-
-
 	// #todo remove this code, find a way to test RoutingModule.loadRoutesFromAnnotatedPages
 	private static List<Route> getRoutesFromPages(Collection<Class> pages,
 	                                              ComponentClassResolver componentClassResolver,
-	                                              LocalizationSetter localizationSetter) {
+	                                              LocalizationSetter localizationSetter,
+	                                              boolean encodeLocaleIntoPath,
+	                                              String applicationFolder) {
 
 		Orderer<Route> orderer = new Orderer<Route>(LoggerFactory.getLogger(RoutingModule.class));
 
@@ -279,7 +198,7 @@ public class RouteTest extends TapestryTestCase {
 					String canonicalized = componentClassResolver.canonicalizePageName(
 							componentClassResolver.resolvePageClassNameToPageName(clazz.getName()));
 					String pathExpression = ann.value();
-					Route route = new Route(pathExpression, canonicalized, localizationSetter, true, "");
+					Route route = new Route(pathExpression, canonicalized, localizationSetter, encodeLocaleIntoPath, applicationFolder);
 					orderer.add(canonicalized.toLowerCase(), route, ann.order());
 				}
 			}

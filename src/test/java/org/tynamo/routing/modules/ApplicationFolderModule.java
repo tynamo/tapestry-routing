@@ -1,4 +1,4 @@
-package org.tynamo.routing.services;
+package org.tynamo.routing.modules;
 
 import org.apache.tapestry5.SymbolConstants;
 import org.apache.tapestry5.ioc.MappedConfiguration;
