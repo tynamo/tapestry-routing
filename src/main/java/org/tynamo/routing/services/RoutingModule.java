@@ -43,8 +43,6 @@ public class RoutingModule {
 		LocalizationSetter localizationSetter, @Symbol(SymbolConstants.APPLICATION_FOLDER) String applicationFolder,
 		@Symbol(SymbolConstants.ENCODE_LOCALE_INTO_PATH) boolean encodeLocaleIntoPath) {
 
-		String folder = applicationFolder.equals("") ? "" : "/" + applicationFolder;
-
 		for (Class clazz : manager.getPages()) {
 			if (clazz.isAnnotationPresent(At.class)) {
 				At ann = (At) clazz.getAnnotation(At.class);
@@ -61,7 +59,7 @@ public class RoutingModule {
 										"\" page should start with a \"/\"");
 					}
 
-					Route route = new Route(folder + pathExpression, canonicalized, localizationSetter, encodeLocaleIntoPath);
+					Route route = new Route(pathExpression, canonicalized, localizationSetter, encodeLocaleIntoPath, applicationFolder);
 
 					configuration.add(canonicalized.toLowerCase(), route, ann.order());
 				}

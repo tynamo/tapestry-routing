@@ -16,27 +16,36 @@ import java.util.regex.Pattern;
 
 public class Route {
 
+	private static final char SLASH = '/';
+
 	private static final String URI_PARAM_NAME_REGEX = "\\w[\\w\\.-]*";
 	private static final String URI_PARAM_REGEX_REGEX = "[^{}][^{}]*";
 	private static final String URI_PARAM_REGEX = "\\{\\s*(" + URI_PARAM_NAME_REGEX + ")\\s*(:\\s*(" + URI_PARAM_REGEX_REGEX + "))?\\}";
 	private static final Pattern URI_PARAM_PATTERN = Pattern.compile(URI_PARAM_REGEX);
 
-	private String canonicalizedPageName;
-	private String pathExpression;
-	private Pattern pattern;
-	private LocalizationSetter localizationSetter;
-	private boolean encodeLocaleIntoPath;
+	private final String canonicalizedPageName;
+	private final String pathExpression;
+	private final Pattern pattern;
+	private final LocalizationSetter localizationSetter;
+	private final boolean encodeLocaleIntoPath;
+	private final String applicationFolder;
 
-	public Route(String pathExpression, String canonicalizedPageName, LocalizationSetter localizationSetter,
-		@Symbol(SymbolConstants.ENCODE_LOCALE_INTO_PATH) boolean encodeLocaleIntoPath) {
+	public Route(final String pathExpression,
+	             final String canonicalizedPageName,
+	             final LocalizationSetter localizationSetter,
+	             @Symbol(SymbolConstants.ENCODE_LOCALE_INTO_PATH) boolean encodeLocaleIntoPath,
+	             @Symbol(SymbolConstants.APPLICATION_FOLDER) final String applicationFolder) {
+
 		this.localizationSetter = localizationSetter;
 		this.canonicalizedPageName = canonicalizedPageName;
 		this.encodeLocaleIntoPath = encodeLocaleIntoPath;
 
+		this.applicationFolder = applicationFolder.equals("") ? "" : SLASH + applicationFolder;
+
 		// remove ending slash unless it's the root path
-		this.pathExpression = pathExpression.length() > 1 && pathExpression.charAt(pathExpression.length()-1) == '/' ? pathExpression.substring(0, pathExpression.length()-1) : pathExpression;
-		
-		if (!this.pathExpression.startsWith("/")) {
+		this.pathExpression = pathExpression.length() > 1 && pathExpression.charAt(pathExpression.length() - 1) == SLASH ? pathExpression.substring(0, pathExpression.length() - 1) : pathExpression;
+
+		if (!(this.pathExpression.charAt(0) == SLASH)) {
 			throw new RuntimeException(
 					"ERROR: Expression: \"" + this.pathExpression + "\" in: \"" + canonicalizedPageName +
 							"\" page should start with a \"/\"");
@@ -85,9 +94,17 @@ public class Route {
 		return null;
 	}
 
-	public String getLocalelessPath(final Request request) {
+	public String removeAppFolderAndLocaleFromPath(final Request request) {
+
 		String path = request.getPath();
+
+		if (this.applicationFolder.length() > 0)
+		{
+			path = path.substring(applicationFolder.length());
+		}
+
 		String locale = getLocaleFromPath(path);
+
 		if (locale != null) {
 			localizationSetter.setLocaleFromLocaleName(locale);
 			path = path.substring(locale.length() + 1);
@@ -100,7 +117,7 @@ public class Route {
 	                                                           final ContextValueEncoder valueEncoder) {
 
 		// remove ending slash unless it's the root path
-		Matcher matcher = pattern.matcher(getLocalelessPath(request));
+		Matcher matcher = pattern.matcher(removeAppFolderAndLocaleFromPath(request));
 		if (!matcher.matches()) return null;
 
 		EventContext context;

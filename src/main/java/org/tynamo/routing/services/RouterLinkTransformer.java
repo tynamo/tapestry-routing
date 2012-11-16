@@ -7,14 +7,16 @@ import org.apache.tapestry5.TapestryConstants;
 import org.apache.tapestry5.internal.services.LinkImpl;
 import org.apache.tapestry5.internal.services.RequestSecurityManager;
 import org.apache.tapestry5.ioc.annotations.Symbol;
-import org.apache.tapestry5.ioc.services.ThreadLocale;
 import org.apache.tapestry5.services.*;
 import org.apache.tapestry5.services.linktransform.PageRenderLinkTransformer;
 import org.tynamo.routing.Route;
 
 import java.text.MessageFormat;
+import java.util.Locale;
 
 public class RouterLinkTransformer implements PageRenderLinkTransformer {
+
+	private static final char SLASH = '/';
 
 	private RouterDispatcher routerDispatcher;
 	private final Request request;
@@ -22,25 +24,28 @@ public class RouterLinkTransformer implements PageRenderLinkTransformer {
 	private final Response response;
 	private final ContextPathEncoder contextPathEncoder;
 	private final BaseURLSource baseURLSource;
+	private final String applicationFolder;
 
 	private static final int BUFFER_SIZE = 100;
-	private ThreadLocale threadLocale;
-	private LocalizationSetter localizationSetter;
+	private PersistentLocale persistentLocale;
 	private boolean encodeLocaleIntoPath;
 
-	public RouterLinkTransformer(RouterDispatcher routerDispatcher, Request request,
-		RequestSecurityManager requestSecurityManager, Response response, ContextPathEncoder contextPathEncoder,
-		BaseURLSource baseURLSource, LocalizationSetter localizationSetter, ThreadLocale threadLocale,
-		@Symbol(SymbolConstants.ENCODE_LOCALE_INTO_PATH) boolean encodeLocaleIntoPath) {
+	public RouterLinkTransformer(RouterDispatcher routerDispatcher,
+	                             Request request,
+	                             RequestSecurityManager requestSecurityManager, Response response,
+	                             ContextPathEncoder contextPathEncoder, BaseURLSource baseURLSource,
+	                             PersistentLocale persistentLocale,
+	                             @Symbol(SymbolConstants.ENCODE_LOCALE_INTO_PATH) boolean encodeLocaleIntoPath,
+	                             @Symbol(SymbolConstants.APPLICATION_FOLDER) final String applicationFolder) {
 		this.routerDispatcher = routerDispatcher;
 		this.request = request;
 		this.requestSecurityManager = requestSecurityManager;
 		this.response = response;
 		this.contextPathEncoder = contextPathEncoder;
 		this.baseURLSource = baseURLSource;
-		this.localizationSetter = localizationSetter;
-		this.threadLocale = threadLocale;
+		this.persistentLocale = persistentLocale;
 		this.encodeLocaleIntoPath = encodeLocaleIntoPath;
+		this.applicationFolder = applicationFolder;
 	}
 
 	public PageRenderRequestParameters decodePageRenderRequest(Request request) {
@@ -61,13 +66,13 @@ public class RouterLinkTransformer implements PageRenderLinkTransformer {
 				builder.append(request.getContextPath());
 			}
 
-			if (encodeLocaleIntoPath && threadLocale.getLocale() != null
-				&& !localizationSetter.getSupportedLocales().get(0).equals(threadLocale.getLocale())) {
-				builder.append("/");
-				builder.append(threadLocale.getLocale().toString());
+			encodeAppFolderAndLocale(builder);
+
+			// deal with the very special case of a simple SLASH as a path expression
+			String pathExpression = route.getPathExpression();
+			if (!(pathExpression.length() == 1 && pathExpression.charAt(0) == SLASH && !applicationFolder.equals(""))) {
+				builder.append(MessageFormat.format(route.getPathExpression(), (Object[]) encode(parameters.getActivationContext())));
 			}
-			builder.append(MessageFormat.format(route.getPathExpression(),
-				(Object[]) encode(parameters.getActivationContext())));
 
 			Link link = new LinkImpl(builder.toString(), false, requestSecurityManager.checkPageSecurity(activePageName), response, contextPathEncoder, baseURLSource);
 
@@ -78,6 +83,25 @@ public class RouterLinkTransformer implements PageRenderLinkTransformer {
 		}
 
 		return null;
+	}
+
+	private void encodeAppFolderAndLocale(StringBuilder builder)
+	{
+		if (!applicationFolder.equals(""))
+		{
+			builder.append(SLASH).append(applicationFolder);
+		}
+
+		if (encodeLocaleIntoPath)
+		{
+			Locale locale = persistentLocale.get();
+
+			if (locale != null)
+			{
+				builder.append(SLASH);
+				builder.append(locale.toString());
+			}
+		}
 	}
 
 	private String[] encode(EventContext context) {

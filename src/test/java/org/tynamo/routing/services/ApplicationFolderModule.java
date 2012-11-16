@@ -8,11 +8,11 @@ import org.apache.tapestry5.ioc.services.ApplicationDefaults;
 import org.apache.tapestry5.ioc.services.SymbolProvider;
 
 @SubModule(TestsModule.class)
-public class ApplicationFolderModule {
+public final class ApplicationFolderModule {
 
 	@Contribute(SymbolProvider.class)
 	@ApplicationDefaults
-	public static void provideApplicationDefaults(MappedConfiguration<String, String> configuration) {
+	public static void provideApplicationDefaults(MappedConfiguration<String, Object> configuration) {
 		configuration.add(SymbolConstants.APPLICATION_FOLDER, "t5");
 	}
 

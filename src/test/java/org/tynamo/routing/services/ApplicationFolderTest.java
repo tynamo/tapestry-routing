@@ -1,39 +1,59 @@
 package org.tynamo.routing.services;
 
+import org.apache.tapestry5.SymbolConstants;
 import org.apache.tapestry5.internal.services.LinkSecurity;
 import org.apache.tapestry5.internal.services.RequestSecurityManager;
 import org.apache.tapestry5.ioc.Registry;
 import org.apache.tapestry5.ioc.RegistryBuilder;
+import org.apache.tapestry5.ioc.services.SymbolProvider;
+import org.apache.tapestry5.ioc.services.SymbolSource;
 import org.apache.tapestry5.ioc.services.ThreadLocale;
 import org.apache.tapestry5.services.*;
 import org.apache.tapestry5.test.TapestryTestCase;
 import org.testng.Assert;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 import org.tynamo.routing.Route;
 import org.tynamo.routing.pages.Home;
+import org.tynamo.routing.pages.SubFolderHome;
 
 public class ApplicationFolderTest extends TapestryTestCase {
 
-	@Test
-	public void auto_discovery_enabled() {
+	private static Registry registry;
 
+	@BeforeSuite
+	public final void setup_registry() {
 		RegistryBuilder builder = new RegistryBuilder();
 
 		builder.add(TapestryModule.class);
 		builder.add(RoutingModule.class);
 		builder.add(ApplicationFolderModule.class);
 
-		Registry registry = builder.build();
+		registry = builder.build();
 
 		registry.performRegistryStartup();
 
-		testPageRenderLinkGeneration(registry, "/myapp/t5", Home.class, "/t5/", "/myapp", 0);
-
-		registry.cleanupThread();
-		registry.shutdown();
-
 	}
 
+	@AfterSuite
+	public final void shutdown_registry() {
+		registry.shutdown();
+
+		registry = null;
+	}
+
+	@AfterMethod
+	public final void cleanupThread() {
+		registry.cleanupThread();
+	}
+
+	public final <T> T getService(Class<T> serviceInterface) {
+		return registry.getService(serviceInterface);
+	}
+
+	@Test
+	public void auto_discovery_enabled() {
+		testPageRenderLinkGeneration(registry, "/myapp/t5", Home.class, "/t5/", "/myapp", 0);
+	}
 
 	public void testPageRenderLinkGeneration(Registry registry,
 	                                         String expectedURI,
@@ -42,12 +62,15 @@ public class ApplicationFolderTest extends TapestryTestCase {
 	                                         String contextPath,
 	                                         int activationContextCount) {
 
+		SymbolSource symbolSource = registry.getService(SymbolSource.class);
+
+		boolean encodeLocaleIntoPath = Boolean.parseBoolean(symbolSource.valueForSymbol(SymbolConstants.ENCODE_LOCALE_INTO_PATH));
+		String applicationFolder = symbolSource.valueForSymbol(SymbolConstants.APPLICATION_FOLDER);
+
 		URLEncoder urlEncoder = registry.getService(URLEncoder.class);
 		ContextValueEncoder valueEncoder = registry.getService(ContextValueEncoder.class);
 		ContextPathEncoder contextPathEncoder = registry.getService(ContextPathEncoder.class);
-		LocalizationSetter localizationSetter = registry.getService(LocalizationSetter.class);
-		ThreadLocale threadLocale = registry.getService(ThreadLocale.class);
-
+		PersistentLocale persistentLocale = registry.getService(PersistentLocale.class);
 
 		ComponentClassResolver classResolver = registry.getService(ComponentClassResolver.class);
 		String logical = classResolver.resolvePageClassNameToPageName(pageClass.getName());
@@ -74,7 +97,7 @@ public class ApplicationFolderTest extends TapestryTestCase {
 		Assert.assertEquals(parameters.getActivationContext().getCount(), activationContextCount);
 
 		RouterLinkTransformer linkTransformer = new RouterLinkTransformer(routerDispatcher, request, securityManager,
-			response, contextPathEncoder, null, localizationSetter, threadLocale, true);
+				response, contextPathEncoder, null, persistentLocale, encodeLocaleIntoPath, applicationFolder);
 
 		Assert.assertEquals(linkTransformer.transformPageRenderLink(null, parameters).toURI(), expectedURI);
 	}

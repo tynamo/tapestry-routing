@@ -23,11 +23,13 @@ public class TestsModule {
 	}
 
 	@Contribute(RouterDispatcher.class)
-	public static void addRoutes(OrderedConfiguration<Route> configuration, LocalizationSetter localizationSetter,
-		@Symbol(SymbolConstants.ENCODE_LOCALE_INTO_PATH) boolean encodeLocaleIntoPath) {
+	public static void addRoutes(OrderedConfiguration<Route> configuration,
+	                             LocalizationSetter localizationSetter,
+	                             @Symbol(SymbolConstants.ENCODE_LOCALE_INTO_PATH) boolean encodeLocaleIntoPath,
+	                             @Symbol(SymbolConstants.APPLICATION_FOLDER) final String applicationFolder) {
 		String canonicalized = "subpackage/UnannotatedPage";
-		configuration.add(canonicalized.toLowerCase(), new Route("/not/annotated/{0}", canonicalized, localizationSetter,
-			encodeLocaleIntoPath));
+		configuration.add(canonicalized.toLowerCase(),
+				new Route("/not/annotated/{0}", canonicalized, localizationSetter, encodeLocaleIntoPath, applicationFolder));
 	}
 	
 }
