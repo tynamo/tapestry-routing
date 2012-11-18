@@ -1,14 +1,17 @@
 package org.tynamo.routing;
 
-import org.apache.tapestry5.SymbolConstants;
 import org.apache.tapestry5.internal.EmptyEventContext;
 import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.apache.tapestry5.ioc.internal.util.Orderer;
-import org.apache.tapestry5.services.*;
+import org.apache.tapestry5.services.ComponentClassResolver;
+import org.apache.tapestry5.services.ComponentRequestHandler;
+import org.apache.tapestry5.services.PageRenderRequestParameters;
+import org.apache.tapestry5.services.Request;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.tynamo.routing.annotations.At;
+import org.tynamo.routing.modules.TestsModule;
 import org.tynamo.routing.pages.Home;
 import org.tynamo.routing.pages.SimplePage;
 import org.tynamo.routing.pages.SubFolderHome;
@@ -16,9 +19,7 @@ import org.tynamo.routing.pages.subpackage.SubPackageMain;
 import org.tynamo.routing.pages.subpackage.SubPage;
 import org.tynamo.routing.pages.subpackage.SubPageFirst;
 import org.tynamo.routing.pages.subpackage.UnannotatedPage;
-import org.tynamo.routing.services.RouterDispatcher;
-import org.tynamo.routing.services.RoutingModule;
-import org.tynamo.routing.modules.TestsModule;
+import org.tynamo.routing.services.*;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -60,7 +61,7 @@ public class RouteTest extends RoutingTestCase {
 
 	@Test
 	public void decode_page_render_request() {
-		Route route = new Route(SimplePage.class.getAnnotation(At.class).value(), SimplePage.class.getSimpleName(), localizationSetter, true, "");
+		Route route = routeFactory.create(SimplePage.class.getAnnotation(At.class).value(), SimplePage.class.getSimpleName());
 		Request request = mockRequest();
 
 		expect(request.getPath()).andReturn("/foo/45/bar/24").atLeastOnce();
@@ -168,12 +169,9 @@ public class RouteTest extends RoutingTestCase {
 
 		requestHandler.handlePageRender(expectedParameters);
 
-		boolean encodeLocaleIntoPath = Boolean.parseBoolean(symbolSource.valueForSymbol(SymbolConstants.ENCODE_LOCALE_INTO_PATH));
-		String applicationFolder = symbolSource.valueForSymbol(SymbolConstants.APPLICATION_FOLDER);
+		List<Route> routes = getRoutesFromPages(Arrays.asList(processOrder), classResolver, routeFactory);
 
-		List<Route> routes = getRoutesFromPages(Arrays.asList(processOrder), classResolver, localizationSetter, encodeLocaleIntoPath, applicationFolder);
-
-		RouterDispatcher routerDispatcher = new RouterDispatcher(requestHandler, null, null, routes, LoggerFactory.getLogger(RouterDispatcher.class));
+		RouterDispatcher routerDispatcher = new RouterDispatcher(requestHandler, null, null, new RouteSourceImpl(routes), LoggerFactory.getLogger(RouterDispatcher.class));
 
 		replay();
 
@@ -185,9 +183,7 @@ public class RouteTest extends RoutingTestCase {
 	// #todo remove this code, find a way to test RoutingModule.loadRoutesFromAnnotatedPages
 	private static List<Route> getRoutesFromPages(Collection<Class> pages,
 	                                              ComponentClassResolver componentClassResolver,
-	                                              LocalizationSetter localizationSetter,
-	                                              boolean encodeLocaleIntoPath,
-	                                              String applicationFolder) {
+	                                              RouteFactory routeFactory) {
 
 		Orderer<Route> orderer = new Orderer<Route>(LoggerFactory.getLogger(RoutingModule.class));
 
@@ -198,7 +194,7 @@ public class RouteTest extends RoutingTestCase {
 					String canonicalized = componentClassResolver.canonicalizePageName(
 							componentClassResolver.resolvePageClassNameToPageName(clazz.getName()));
 					String pathExpression = ann.value();
-					Route route = new Route(pathExpression, canonicalized, localizationSetter, encodeLocaleIntoPath, applicationFolder);
+					Route route = routeFactory.create(pathExpression, canonicalized);
 					orderer.add(canonicalized.toLowerCase(), route, ann.order());
 				}
 			}

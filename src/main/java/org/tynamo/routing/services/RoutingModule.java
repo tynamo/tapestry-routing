@@ -1,20 +1,18 @@
 package org.tynamo.routing.services;
 
-import org.apache.tapestry5.SymbolConstants;
 import org.apache.tapestry5.internal.InternalSymbols;
 import org.apache.tapestry5.ioc.Configuration;
 import org.apache.tapestry5.ioc.MappedConfiguration;
 import org.apache.tapestry5.ioc.OrderedConfiguration;
 import org.apache.tapestry5.ioc.ServiceBinder;
+import org.apache.tapestry5.ioc.annotations.Autobuild;
 import org.apache.tapestry5.ioc.annotations.Contribute;
 import org.apache.tapestry5.ioc.annotations.Primary;
 import org.apache.tapestry5.ioc.annotations.Symbol;
 import org.apache.tapestry5.ioc.services.ClassNameLocator;
 import org.apache.tapestry5.ioc.services.FactoryDefaults;
 import org.apache.tapestry5.ioc.services.SymbolProvider;
-import org.apache.tapestry5.services.ComponentClassResolver;
 import org.apache.tapestry5.services.Dispatcher;
-import org.apache.tapestry5.services.LocalizationSetter;
 import org.apache.tapestry5.services.linktransform.PageRenderLinkTransformer;
 import org.tynamo.routing.Route;
 import org.tynamo.routing.RoutingSymbols;
@@ -23,8 +21,11 @@ import org.tynamo.routing.annotations.At;
 public class RoutingModule {
 
 	public static void bind(ServiceBinder binder) {
-		binder.bind(RouterDispatcher.class);
-		binder.bind(AnnotatedPagesManager.class, AnnotatedPagesManagerImpl.class);
+
+		binder.bind(AnnotatedPagesManager.class);
+		binder.bind(RouteSource.class);
+		binder.bind(RouteFactory.class);
+
 	}
 
 	@Contribute(PageRenderLinkTransformer.class)
@@ -33,35 +34,25 @@ public class RoutingModule {
 		configuration.addInstance("RouterLinkTransformer", RouterLinkTransformer.class);
 	}
 
-	public static void contributeMasterDispatcher(OrderedConfiguration<Dispatcher> configuration, RouterDispatcher dispatcher) {
+	public static void contributeMasterDispatcher(OrderedConfiguration<Dispatcher> configuration,
+	                                              @Autobuild RouterDispatcher dispatcher) {
 		configuration.add(RouterDispatcher.class.getSimpleName(), dispatcher, "after:PageRender");
 	}
 
-	@Contribute(RouterDispatcher.class)
+	@Contribute(RouteSource.class)
 	public static void loadRoutesFromAnnotatedPages(OrderedConfiguration<Route> configuration,
-		AnnotatedPagesManager manager, ComponentClassResolver componentClassResolver,
-		LocalizationSetter localizationSetter, @Symbol(SymbolConstants.APPLICATION_FOLDER) String applicationFolder,
-		@Symbol(SymbolConstants.ENCODE_LOCALE_INTO_PATH) boolean encodeLocaleIntoPath) {
+	                                                AnnotatedPagesManager manager,
+	                                                RouteFactory routeFactory) {
 
 		for (Class clazz : manager.getPages()) {
 			if (clazz.isAnnotationPresent(At.class)) {
 				At ann = (At) clazz.getAnnotation(At.class);
 				if (ann != null) {
 
-					String canonicalized = componentClassResolver.canonicalizePageName(
-							componentClassResolver.resolvePageClassNameToPageName(clazz.getName()));
-
 					String pathExpression = ann.value();
+					Route route = routeFactory.create(pathExpression, clazz);
+					configuration.add(route.getCanonicalizedPageName().toLowerCase(), route, ann.order());
 
-					if (!pathExpression.startsWith("/")) {
-						throw new RuntimeException(
-								"ERROR: Expression: \"" + pathExpression + "\" in: \"" + canonicalized +
-										"\" page should start with a \"/\"");
-					}
-
-					Route route = new Route(pathExpression, canonicalized, localizationSetter, encodeLocaleIntoPath, applicationFolder);
-
-					configuration.add(canonicalized.toLowerCase(), route, ann.order());
 				}
 			}
 		}

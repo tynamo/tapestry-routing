@@ -18,7 +18,7 @@ public class RouterLinkTransformer implements PageRenderLinkTransformer {
 
 	private static final char SLASH = '/';
 
-	private RouterDispatcher routerDispatcher;
+	private final RouteSource routeSource;
 	private final Request request;
 	private final RequestSecurityManager requestSecurityManager;
 	private final Response response;
@@ -30,14 +30,14 @@ public class RouterLinkTransformer implements PageRenderLinkTransformer {
 	private PersistentLocale persistentLocale;
 	private boolean encodeLocaleIntoPath;
 
-	public RouterLinkTransformer(RouterDispatcher routerDispatcher,
+	public RouterLinkTransformer(RouteSource routeSource,
 	                             Request request,
 	                             RequestSecurityManager requestSecurityManager, Response response,
 	                             ContextPathEncoder contextPathEncoder, BaseURLSource baseURLSource,
 	                             PersistentLocale persistentLocale,
 	                             @Symbol(SymbolConstants.ENCODE_LOCALE_INTO_PATH) boolean encodeLocaleIntoPath,
 	                             @Symbol(SymbolConstants.APPLICATION_FOLDER) final String applicationFolder) {
-		this.routerDispatcher = routerDispatcher;
+		this.routeSource = routeSource;
 		this.request = request;
 		this.requestSecurityManager = requestSecurityManager;
 		this.response = response;
@@ -56,7 +56,7 @@ public class RouterLinkTransformer implements PageRenderLinkTransformer {
 
 		String activePageName = parameters.getLogicalPageName();
 
-		Route route = routerDispatcher.getRoute(activePageName);
+		Route route = routeSource.getRoute(activePageName);
 
 		if (route != null) {
 			StringBuilder builder = new StringBuilder(BUFFER_SIZE);

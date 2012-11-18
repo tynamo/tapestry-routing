@@ -12,10 +12,7 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
-import org.tynamo.routing.Route;
-import org.tynamo.routing.services.RouterDispatcher;
-import org.tynamo.routing.services.RouterLinkTransformer;
-import org.tynamo.routing.services.RoutingModule;
+import org.tynamo.routing.services.*;
 
 public abstract class RoutingTestCase extends TapestryTestCase {
 
@@ -23,11 +20,11 @@ public abstract class RoutingTestCase extends TapestryTestCase {
 	protected URLEncoder urlEncoder;
 	protected ContextValueEncoder valueEncoder;
 	protected ContextPathEncoder contextPathEncoder;
-	protected LocalizationSetter localizationSetter;
 	protected PersistentLocale persistentLocale;
 	protected SymbolSource symbolSource;
 	protected ComponentClassResolver classResolver;
-	protected RouterDispatcher routerDispatcher;
+	protected RouteSource routeSource;
+	protected RouteFactory routeFactory;
 
 	protected abstract void addAdditionalModules(RegistryBuilder builder);
 
@@ -46,11 +43,11 @@ public abstract class RoutingTestCase extends TapestryTestCase {
 		urlEncoder = getService(URLEncoder.class);
 		valueEncoder = getService(ContextValueEncoder.class);
 		contextPathEncoder = getService(ContextPathEncoder.class);
-		localizationSetter = getService(LocalizationSetter.class);
+		routeFactory = getService(RouteFactory.class);
 		persistentLocale = getService(PersistentLocale.class);
 		symbolSource = registry.getService(SymbolSource.class);
 		classResolver = registry.getService(ComponentClassResolver.class);
-		routerDispatcher = registry.getService(RouterDispatcher.class);
+		routeSource = registry.getService(RouteSource.class);
 	}
 
 	@AfterClass
@@ -93,14 +90,14 @@ public abstract class RoutingTestCase extends TapestryTestCase {
 
 		replay();
 
-		Route route = routerDispatcher.getRoute(canonicalized);
+		Route route = routeSource.getRoute(canonicalized);
 
 		PageRenderRequestParameters parameters = route.decodePageRenderRequest(request, urlEncoder, valueEncoder);
 
 		Assert.assertEquals(parameters.getLogicalPageName(), logical);
 		Assert.assertEquals(parameters.getActivationContext().getCount(), activationContextCount);
 
-		RouterLinkTransformer linkTransformer = new RouterLinkTransformer(routerDispatcher, request, securityManager,
+		RouterLinkTransformer linkTransformer = new RouterLinkTransformer(routeSource, request, securityManager,
 				response, contextPathEncoder, null, persistentLocale, encodeLocaleIntoPath, applicationFolder);
 
 		Assert.assertEquals(linkTransformer.transformPageRenderLink(null, parameters).toURI(), expectedURI);
