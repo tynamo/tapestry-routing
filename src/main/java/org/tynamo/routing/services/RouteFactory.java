@@ -5,7 +5,8 @@ import org.tynamo.routing.Route;
 public interface RouteFactory {
 
 	Route create(String pathExpression, String canonicalized);
-	Route create(String pathExpression, Class page);
 
+	@Deprecated
+	Route create(String pathExpression, Class page);
 
 }

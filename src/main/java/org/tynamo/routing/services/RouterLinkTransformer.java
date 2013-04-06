@@ -49,7 +49,7 @@ public class RouterLinkTransformer implements PageRenderLinkTransformer {
 	}
 
 	public PageRenderRequestParameters decodePageRenderRequest(Request request) {
-		return null;
+		return routeSource.decodePageRenderRequest(request);
 	}
 
 	public Link transformPageRenderLink(Link defaultLink, PageRenderRequestParameters parameters) {

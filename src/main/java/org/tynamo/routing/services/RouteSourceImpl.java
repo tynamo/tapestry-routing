@@ -1,34 +1,38 @@
 package org.tynamo.routing.services;
 
-import org.apache.tapestry5.ioc.internal.util.CollectionFactory;
+import org.apache.tapestry5.services.PageRenderRequestParameters;
+import org.apache.tapestry5.services.Request;
 import org.tynamo.routing.Route;
 
 import java.util.List;
-import java.util.Map;
 
 public class RouteSourceImpl implements RouteSource {
 
-	private final List<Route> routes;
-	private final Map<String, Route> routeMap = CollectionFactory.newConcurrentMap();
+	private final RouteDecoder routeDecoder;
+	private final List<RouteProvider> providers;
 
-	public RouteSourceImpl(List<Route> routes) {
-		this.routes = routes;
-		buildMap();
+	public RouteSourceImpl(List<RouteProvider> providers, RouteDecoder routeDecoder) {
+		this.routeDecoder = routeDecoder;
+		this.providers = providers;
 	}
 
-	private void buildMap() {
-		for (Route route : routes) {
-			routeMap.put(route.getCanonicalizedPageName(), route);
+	@Override
+	public Route getRoute(final String canonicalizedPageName) {
+		for (RouteProvider routeProvider : providers) {
+			Route route = routeProvider.getRoute(canonicalizedPageName);
+			if (route != null) return route;
 		}
+		return null;
 	}
 
 	@Override
-	public Route getRoute(String canonicalizedPageName) {
-		return routeMap.get(canonicalizedPageName);
-	}
-
-	@Override
-	public List<Route> getRoutes() {
-		return routes;
+	public PageRenderRequestParameters decodePageRenderRequest(Request request) {
+		for (RouteProvider routeProvider : providers) {
+			for (Route route : routeProvider.getRoutes()) {
+				PageRenderRequestParameters parameters = routeDecoder.decodePageRenderRequest(route, request);
+				if (parameters != null) return parameters;
+			}
+		}
+		return null;
 	}
 }

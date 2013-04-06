@@ -3,6 +3,7 @@ package org.tynamo.routing;
 import org.apache.tapestry5.SymbolConstants;
 import org.apache.tapestry5.internal.services.LinkSecurity;
 import org.apache.tapestry5.internal.services.RequestSecurityManager;
+import org.apache.tapestry5.internal.test.PageTesterContext;
 import org.apache.tapestry5.ioc.Registry;
 import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.apache.tapestry5.ioc.services.SymbolSource;
@@ -25,6 +26,7 @@ public abstract class RoutingTestCase extends TapestryTestCase {
 	protected ComponentClassResolver classResolver;
 	protected RouteSource routeSource;
 	protected RouteFactory routeFactory;
+	protected RouteDecoder routeDecoder;
 
 	protected abstract void addAdditionalModules(RegistryBuilder builder);
 
@@ -38,6 +40,10 @@ public abstract class RoutingTestCase extends TapestryTestCase {
 		addAdditionalModules(builder);
 
 		registry = builder.build();
+
+		ApplicationGlobals globals = registry.getObject(ApplicationGlobals.class, null);
+		globals.storeContext(new PageTesterContext("src/test/webapp"));
+
 		registry.performRegistryStartup();
 
 		urlEncoder = getService(URLEncoder.class);
@@ -48,6 +54,8 @@ public abstract class RoutingTestCase extends TapestryTestCase {
 		symbolSource = registry.getService(SymbolSource.class);
 		classResolver = registry.getService(ComponentClassResolver.class);
 		routeSource = registry.getService(RouteSource.class);
+		routeDecoder = getService(RouteDecoder.class);
+
 	}
 
 	@AfterClass
@@ -92,7 +100,7 @@ public abstract class RoutingTestCase extends TapestryTestCase {
 
 		Route route = routeSource.getRoute(canonicalized);
 
-		PageRenderRequestParameters parameters = route.decodePageRenderRequest(request, urlEncoder, valueEncoder);
+		PageRenderRequestParameters parameters = routeDecoder.decodePageRenderRequest(route, request);
 
 		Assert.assertEquals(parameters.getLogicalPageName(), logical);
 		Assert.assertEquals(parameters.getActivationContext().getCount(), activationContextCount);
