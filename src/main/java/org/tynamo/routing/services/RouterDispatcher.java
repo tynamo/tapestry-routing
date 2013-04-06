@@ -14,7 +14,7 @@ public class RouterDispatcher implements Dispatcher {
 	private final ComponentRequestHandler componentRequestHandler;
 	private final RouteSource routeSource;
 
-	public RouterDispatcher(ComponentRequestHandler componentRequestHandler, @Primary RouteSource routeSource) {
+	public RouterDispatcher(ComponentRequestHandler componentRequestHandler, RouteSource routeSource) {
 		this.componentRequestHandler = componentRequestHandler;
 		this.routeSource = routeSource;
 	}
