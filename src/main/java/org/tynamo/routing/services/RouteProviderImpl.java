@@ -3,6 +3,7 @@ package org.tynamo.routing.services;
 import org.apache.tapestry5.ioc.internal.util.CollectionFactory;
 import org.tynamo.routing.Route;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -12,7 +13,7 @@ public class RouteProviderImpl implements RouteProvider {
 	private final Map<String, Route> routeMap = CollectionFactory.newConcurrentMap();
 
 	public RouteProviderImpl(List<Route> routes) {
-		this.routes = routes;
+		this.routes = Collections.unmodifiableList(routes);
 		for (Route route : routes) {
 			routeMap.put(route.getCanonicalizedPageName(), route);
 		}

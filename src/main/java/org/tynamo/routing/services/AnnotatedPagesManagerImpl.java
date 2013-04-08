@@ -14,6 +14,7 @@ import org.tynamo.routing.Route;
 import org.tynamo.routing.RoutingSymbols;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -29,6 +30,7 @@ public class AnnotatedPagesManagerImpl implements AnnotatedPagesManager, Invalid
 
 	private final List<Route> routes = CollectionFactory.newList();
 	private final Map<String, Route> routeMap = CollectionFactory.newConcurrentMap();
+	private final List<Route> unmodifiableViewOfRoutes = Collections.unmodifiableList(routes);
 
 	private boolean objectWasInvalidated;
 
@@ -91,6 +93,6 @@ public class AnnotatedPagesManagerImpl implements AnnotatedPagesManager, Invalid
 	@Override
 	public List<Route> getRoutes() {
 		if (objectWasInvalidated) eagerLoadPages();
-		return routes;
+		return unmodifiableViewOfRoutes;
 	}
 }
