@@ -5,11 +5,13 @@ import org.apache.tapestry5.internal.services.PageSource;
 import org.apache.tapestry5.ioc.annotations.PostInjection;
 import org.apache.tapestry5.ioc.annotations.Symbol;
 import org.apache.tapestry5.ioc.internal.util.CollectionFactory;
+import org.apache.tapestry5.ioc.internal.util.Orderer;
 import org.apache.tapestry5.ioc.services.ClassNameLocator;
 import org.apache.tapestry5.services.ComponentClassResolver;
 import org.apache.tapestry5.services.ComponentClasses;
 import org.apache.tapestry5.services.InvalidationEventHub;
 import org.apache.tapestry5.services.InvalidationListener;
+import org.slf4j.Logger;
 import org.tynamo.routing.Route;
 import org.tynamo.routing.RoutingSymbols;
 
@@ -22,37 +24,46 @@ public class AnnotatedPagesManagerImpl implements AnnotatedPagesManager, Invalid
 
 	private final Collection<Class> contributedClasses;
 
+	private final Logger logger;
 	private final ClassNameLocator classNameLocator;
 	private final ComponentClassResolver componentClassResolver;
 	private final PageSource pageSource;
 	private final String appPackage;
 	private final Boolean preventScan;
 
-	private final List<Route> routes = CollectionFactory.newList();
-	private final Map<String, Route> routeMap = CollectionFactory.newConcurrentMap();
-	private final List<Route> unmodifiableViewOfRoutes = Collections.unmodifiableList(routes);
+	private Orderer<Route> routeOrderer;
+	private List<Route> routes;
+	private Map<String, Route> routeMap;
 
 	private boolean objectWasInvalidated;
 
 	public AnnotatedPagesManagerImpl(Collection<Class> pages,
+	                                 Logger logger,
 	                                 ClassNameLocator classNameLocator,
 	                                 ComponentClassResolver componentClassResolver,
 	                                 PageSource pageSource,
 	                                 @Symbol(InternalConstants.TAPESTRY_APP_PACKAGE_PARAM) String appPackage,
 	                                 @Symbol(RoutingSymbols.DISABLE_AUTODISCOVERY) Boolean preventScan) {
+
 		this.contributedClasses = pages;
+
+		this.logger = logger;
 		this.classNameLocator = classNameLocator;
 		this.componentClassResolver = componentClassResolver;
 		this.pageSource = pageSource;
 
 		this.appPackage = appPackage;
 		this.preventScan = preventScan;
+
 		this.objectWasInvalidated = true;
+
+		routeOrderer = new Orderer<Route>(logger);
+		routeMap = CollectionFactory.newConcurrentMap();
 	}
 
 	@Override
-	public void add(Route route) {
-		routes.add(route);
+	public void add(Route route, String... order) {
+		routeOrderer.add(route.getCanonicalizedPageName(), route, order);
 		routeMap.put(route.getCanonicalizedPageName(), route);
 	}
 
@@ -81,7 +92,9 @@ public class AnnotatedPagesManagerImpl implements AnnotatedPagesManager, Invalid
 	@Override
 	public void objectWasInvalidated() {
 		objectWasInvalidated = true;
-		routes.clear();
+		routeOrderer = new Orderer<Route>(logger);
+		routeMap.clear();
+		routes = null;
 	}
 
 	@Override
@@ -93,6 +106,9 @@ public class AnnotatedPagesManagerImpl implements AnnotatedPagesManager, Invalid
 	@Override
 	public List<Route> getRoutes() {
 		if (objectWasInvalidated) eagerLoadPages();
-		return unmodifiableViewOfRoutes;
+		if (routes == null) {
+			routes = Collections.unmodifiableList(routeOrderer.getOrdered());
+		}
+		return routes;
 	}
 }

@@ -2,13 +2,9 @@ package org.tynamo.routing;
 
 import org.apache.tapestry5.internal.EmptyEventContext;
 import org.apache.tapestry5.ioc.RegistryBuilder;
-import org.apache.tapestry5.ioc.internal.util.CollectionFactory;
-import org.apache.tapestry5.ioc.internal.util.Orderer;
-import org.apache.tapestry5.services.ComponentClassResolver;
 import org.apache.tapestry5.services.ComponentRequestHandler;
 import org.apache.tapestry5.services.PageRenderRequestParameters;
 import org.apache.tapestry5.services.Request;
-import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.tynamo.routing.annotations.At;
@@ -18,14 +14,10 @@ import org.tynamo.routing.pages.SimplePage;
 import org.tynamo.routing.pages.SubFolderHome;
 import org.tynamo.routing.pages.subpackage.SubPackageMain;
 import org.tynamo.routing.pages.subpackage.SubPage;
-import org.tynamo.routing.pages.subpackage.SubPageFirst;
 import org.tynamo.routing.pages.subpackage.UnannotatedPage;
-import org.tynamo.routing.services.*;
+import org.tynamo.routing.services.RouterDispatcher;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -153,67 +145,19 @@ public class RouteTest extends RoutingTestCase {
 	@Test
 	public void order() throws IOException {
 
-		Class[] processOrder = {SubPage.class, SubPageFirst.class};
-		Class first = SubPageFirst.class;
-		String requestPath = "/subpackage/inventedpath";
-
-		ComponentClassResolver classResolver = getService(ComponentClassResolver.class);
-		String logical = classResolver.resolvePageClassNameToPageName(first.getName());
-		String canonicalized = classResolver.canonicalizePageName(logical);
-
 		Request request = mockRequest();
-		expect(request.getPath()).andReturn(requestPath).atLeastOnce();
+		expect(request.getPath()).andReturn("/subpackage/inventedpath").atLeastOnce();
 
-		PageRenderRequestParameters expectedParameters = new PageRenderRequestParameters(canonicalized, new EmptyEventContext(), false);
-
+		PageRenderRequestParameters expectedParameters = new PageRenderRequestParameters("subpackage/SubPageFirst", new EmptyEventContext(), false);
 		ComponentRequestHandler requestHandler = mockComponentRequestHandler();
-
 		requestHandler.handlePageRender(expectedParameters);
 
-		final List<Route> routes = getRoutesFromPages(Arrays.asList(processOrder), classResolver, routeFactory);
-
-/*
-		RouteProvider routeProvider = new RouteProvider(){
-			@Override
-			public List<Route> getRoutes() {
-				return routes;
-			}
-		};
-
-		List<RouteProvider> providers = CollectionFactory.newList(routeProvider);
-
-		RouteSource routeSource = new RouteSourceImpl(providers);
-
-		RouterDispatcher routerDispatcher = new RouterDispatcher(requestHandler, null, null, routeSource, LoggerFactory.getLogger(RouterDispatcher.class));
+		RouterDispatcher routerDispatcher = new RouterDispatcher(requestHandler, routeSource);
 
 		replay();
 
 		routerDispatcher.dispatch(request, null);
 
 		verify();
-*/
 	}
-
-	// #todo remove this code, find a way to test RoutingModule.loadRoutesFromAnnotatedPages
-	private static List<Route> getRoutesFromPages(Collection<Class> pages,
-	                                              ComponentClassResolver componentClassResolver,
-	                                              RouteFactory routeFactory) {
-
-		Orderer<Route> orderer = new Orderer<Route>(LoggerFactory.getLogger(RoutingModule.class));
-
-		for (Class clazz : pages) {
-			if (clazz.isAnnotationPresent(At.class)) {
-				At ann = (At) clazz.getAnnotation(At.class);
-				if (ann != null) {
-					String canonicalized = componentClassResolver.canonicalizePageName(
-							componentClassResolver.resolvePageClassNameToPageName(clazz.getName()));
-					String pathExpression = ann.value();
-					Route route = routeFactory.create(pathExpression, canonicalized);
-					orderer.add(canonicalized.toLowerCase(), route, ann.order());
-				}
-			}
-		}
-		return orderer.getOrdered();
-	}
-
 }

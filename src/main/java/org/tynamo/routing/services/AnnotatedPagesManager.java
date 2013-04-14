@@ -9,6 +9,6 @@ import org.tynamo.routing.Route;
 @UsesConfiguration(Class.class)
 public interface AnnotatedPagesManager extends RouteProvider {
 
-	void add(Route route);
+	void add(Route route, String... order);
 
 }

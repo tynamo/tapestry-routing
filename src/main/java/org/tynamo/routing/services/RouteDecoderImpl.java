@@ -97,7 +97,7 @@ public class RouteDecoderImpl implements RouteDecoder {
 		}
 
 		if (logger.isDebugEnabled())
-			logger.debug("routing using route: \"" + route.getPathExpression() + "\" for page: " + route.getCanonicalizedPageName());
+			logger.debug("decoding render request using route: \"" + route.getPathExpression() + "\" for page: " + route.getCanonicalizedPageName());
 
 		return new PageRenderRequestParameters(route.getCanonicalizedPageName(), context, false);
 

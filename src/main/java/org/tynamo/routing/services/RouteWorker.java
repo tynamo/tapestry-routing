@@ -24,7 +24,7 @@ public class RouteWorker implements ComponentClassTransformWorker2 {
 	public void transform(PlasticClass plasticClass, TransformationSupport support, MutableComponentModel model) {
 
 		String pathExpression = null;
-		String[] order;
+		String[] order = {};
 
 		if (plasticClass.hasAnnotation(At.class)) {
 			At ann = plasticClass.getAnnotation(At.class);
@@ -42,7 +42,7 @@ public class RouteWorker implements ComponentClassTransformWorker2 {
 
 			org.tynamo.routing.Route route = routeFactory.create(pathExpression, canonicalized);
 
-			annotatedPagesManager.add(route);
+			annotatedPagesManager.add(route, order);
 		}
 	}
 }

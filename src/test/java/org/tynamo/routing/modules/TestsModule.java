@@ -1,6 +1,7 @@
 package org.tynamo.routing.modules;
 
 import org.apache.tapestry5.SymbolConstants;
+import org.apache.tapestry5.TapestryConstants;
 import org.apache.tapestry5.internal.InternalConstants;
 import org.apache.tapestry5.internal.InternalSymbols;
 import org.apache.tapestry5.ioc.MappedConfiguration;
@@ -22,6 +23,7 @@ public class TestsModule {
 		configuration.add(InternalSymbols.APP_NAME, "app");
 		configuration.add(InternalSymbols.APP_PACKAGE_PATH, "org/tynamo/routing");
 		configuration.add(SymbolConstants.SUPPORTED_LOCALES, "en_US,fi");
+		configuration.add(SymbolConstants.PRODUCTION_MODE, false);
 	}
 
 	@Primary @Contribute(RouteProvider.class)
