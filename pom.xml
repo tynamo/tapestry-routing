@@ -12,7 +12,7 @@
 	<parent>
 		<groupId>org.tynamo</groupId>
 		<artifactId>tynamo-parent</artifactId>
-		<version>0.0.11</version>
+		<version>0.0.12</version>
 	</parent>
 
 	<scm>
@@ -28,10 +28,6 @@
 			<url>dav:https://dav.codehaus.org/tynamo/constant/sites/tapestry-routing</url>
 		</site>
 	</distributionManagement>
-
-	<properties>
-		<tapestry-release-version>5.3.7</tapestry-release-version>
-	</properties>
 
 	<build>
 		<plugins>
