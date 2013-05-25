@@ -15,6 +15,8 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.tynamo.routing.services.*;
 
+import java.util.Locale;
+
 public abstract class RoutingTestCase extends TapestryTestCase {
 
 	protected Registry registry;
@@ -79,9 +81,32 @@ public abstract class RoutingTestCase extends TapestryTestCase {
 	                                         String contextPath,
 	                                         int activationContextCount) {
 
+		testPageRenderLinkGeneration(expectedURI, pageClass, requestPath, contextPath, activationContextCount, null);
+	}
+
+	public void testPageRenderLinkGeneration(String expectedURI,
+	                                         Class pageClass,
+	                                         String requestPath,
+	                                         String contextPath,
+	                                         int activationContextCount,
+	                                         Locale locale) {
 
 		boolean encodeLocaleIntoPath = Boolean.parseBoolean(symbolSource.valueForSymbol(SymbolConstants.ENCODE_LOCALE_INTO_PATH));
 		String applicationFolder = symbolSource.valueForSymbol(SymbolConstants.APPLICATION_FOLDER);
+
+		testPageRenderLinkGeneration(expectedURI, pageClass, requestPath, contextPath, activationContextCount, locale, encodeLocaleIntoPath, applicationFolder);
+	}
+
+
+	public void testPageRenderLinkGeneration(String expectedURI,
+	                                         Class pageClass,
+	                                         String requestPath,
+	                                         String contextPath,
+	                                         int activationContextCount,
+	                                         Locale locale,
+	                                         boolean encodeLocaleIntoPath,
+	                                         String applicationFolder) {
+		if (locale != null) persistentLocale.set(locale);
 
 		String logical = classResolver.resolvePageClassNameToPageName(pageClass.getName());
 		String canonicalized = classResolver.canonicalizePageName(logical);

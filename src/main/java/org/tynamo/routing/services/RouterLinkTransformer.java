@@ -49,7 +49,8 @@ public class RouterLinkTransformer implements PageRenderLinkTransformer {
 	}
 
 	public PageRenderRequestParameters decodePageRenderRequest(Request request) {
-		return routeSource.decodePageRenderRequest(request);
+		// this transformer should not intervene in the request decoding process
+		return null; // return null to continue down the PageRenderLinkTransformer chain
 	}
 
 	public Link transformPageRenderLink(Link defaultLink, PageRenderRequestParameters parameters) {
