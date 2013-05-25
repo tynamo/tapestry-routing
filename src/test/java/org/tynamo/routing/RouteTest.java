@@ -29,7 +29,7 @@ public class RouteTest extends RoutingTestCase {
 	private static final String EMPTY_PATH = "";
 	private static final int NO_CONTEXT = 0;
 	private static final String APPLICATION_FOLDER = "";
-	private static final Locale FI = Locale.forLanguageTag("fi");
+	private static final Locale FI = new Locale("fi");
 
 	@Override
 	protected void addAdditionalModules(RegistryBuilder builder) {
