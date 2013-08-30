@@ -72,7 +72,12 @@ public class AnnotatedPagesManagerImpl implements AnnotatedPagesManager, Invalid
 		if (!preventScan) {
 			for (String className : classNameLocator.locateClassNames(appPackage + "." + InternalConstants.PAGES_SUBPACKAGE)) {
 				String pageName = componentClassResolver.resolvePageClassNameToPageName(className);
-				pageSource.getPage(componentClassResolver.canonicalizePageName(pageName));
+				try {
+					pageSource.getPage(componentClassResolver.canonicalizePageName(pageName));
+				} catch (Exception e) {
+					// TYNAMO-222
+					logger.error(e.getMessage());
+				}
 			}
 		}
 
