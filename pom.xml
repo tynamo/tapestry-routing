@@ -29,6 +29,10 @@
 		</site>
 	</distributionManagement>
 
+	<properties>
+		<tapestry-release-version>5.4-beta-2</tapestry-release-version>
+	</properties>
+
 	<build>
 		<plugins>
 			<plugin>

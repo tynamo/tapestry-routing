@@ -1,12 +1,13 @@
 package org.tynamo.routing;
 
+import org.apache.tapestry5.LinkSecurity;
 import org.apache.tapestry5.SymbolConstants;
-import org.apache.tapestry5.internal.services.LinkSecurity;
 import org.apache.tapestry5.internal.services.RequestSecurityManager;
 import org.apache.tapestry5.internal.test.PageTesterContext;
 import org.apache.tapestry5.ioc.Registry;
 import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.apache.tapestry5.ioc.services.SymbolSource;
+import org.apache.tapestry5.modules.TapestryModule;
 import org.apache.tapestry5.services.*;
 import org.apache.tapestry5.test.TapestryTestCase;
 import org.testng.Assert;
