@@ -1,6 +1,7 @@
 package org.tynamo.routing;
 
 import org.apache.tapestry5.internal.EmptyEventContext;
+import org.apache.tapestry5.internal.InternalConstants;
 import org.apache.tapestry5.internal.services.PageRenderDispatcher;
 import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.apache.tapestry5.services.*;
@@ -195,6 +196,7 @@ public class RouteTest extends RoutingTestCase {
 		expect(request.getPath()).andReturn("/home").atLeastOnce();
 		expect(request.getParameter("t:lb")).andReturn(null).atLeastOnce();
 		expect(request.getLocale()).andReturn(FI).atLeastOnce();
+		expect(request.getAttribute(InternalConstants.REFERENCED_COMPONENT_NOT_FOUND)).andReturn(null).once();
 
 		Capture<PageRenderRequestParameters> parameters = newCapture();
 
