@@ -12,7 +12,7 @@
 	<parent>
 		<groupId>org.tynamo</groupId>
 		<artifactId>tynamo-parent</artifactId>
-		<version>0.1.0</version>
+		<version>0.1.1</version>
 	</parent>
 
 	<scm>
@@ -31,7 +31,7 @@
 	</distributionManagement>
 
 	<properties>
-		<tapestry-release-version>5.4-beta-22</tapestry-release-version>
+		<tapestry-release-version>5.4-beta-26</tapestry-release-version>
 	</properties>
 
 	<build>
