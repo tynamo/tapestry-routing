@@ -1,0 +1,109 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>package org.tynamo.routing.modules;<a name="line.1"></a>
+<span class="sourceLineNo">002</span><a name="line.2"></a>
+<span class="sourceLineNo">003</span>import org.apache.tapestry5.SymbolConstants;<a name="line.3"></a>
+<span class="sourceLineNo">004</span>import org.apache.tapestry5.TapestryConstants;<a name="line.4"></a>
+<span class="sourceLineNo">005</span>import org.apache.tapestry5.internal.InternalConstants;<a name="line.5"></a>
+<span class="sourceLineNo">006</span>import org.apache.tapestry5.internal.InternalSymbols;<a name="line.6"></a>
+<span class="sourceLineNo">007</span>import org.apache.tapestry5.ioc.MappedConfiguration;<a name="line.7"></a>
+<span class="sourceLineNo">008</span>import org.apache.tapestry5.ioc.OrderedConfiguration;<a name="line.8"></a>
+<span class="sourceLineNo">009</span>import org.apache.tapestry5.ioc.annotations.Contribute;<a name="line.9"></a>
+<span class="sourceLineNo">010</span>import org.apache.tapestry5.ioc.annotations.Primary;<a name="line.10"></a>
+<span class="sourceLineNo">011</span>import org.apache.tapestry5.ioc.services.ApplicationDefaults;<a name="line.11"></a>
+<span class="sourceLineNo">012</span>import org.apache.tapestry5.ioc.services.SymbolProvider;<a name="line.12"></a>
+<span class="sourceLineNo">013</span>import org.tynamo.routing.Route;<a name="line.13"></a>
+<span class="sourceLineNo">014</span>import org.tynamo.routing.services.RouteFactory;<a name="line.14"></a>
+<span class="sourceLineNo">015</span>import org.tynamo.routing.services.RouteProvider;<a name="line.15"></a>
+<span class="sourceLineNo">016</span><a name="line.16"></a>
+<span class="sourceLineNo">017</span>public class TestsModule {<a name="line.17"></a>
+<span class="sourceLineNo">018</span><a name="line.18"></a>
+<span class="sourceLineNo">019</span>        @Contribute(SymbolProvider.class)<a name="line.19"></a>
+<span class="sourceLineNo">020</span>        @ApplicationDefaults<a name="line.20"></a>
+<span class="sourceLineNo">021</span>        public static void provideApplicationDefaults(MappedConfiguration&lt;String, Object&gt; configuration) {<a name="line.21"></a>
+<span class="sourceLineNo">022</span>                configuration.add(InternalConstants.TAPESTRY_APP_PACKAGE_PARAM, "org.tynamo.routing");<a name="line.22"></a>
+<span class="sourceLineNo">023</span>                configuration.add(InternalSymbols.APP_NAME, "app");<a name="line.23"></a>
+<span class="sourceLineNo">024</span>                configuration.add(InternalSymbols.APP_PACKAGE_PATH, "org/tynamo/routing");<a name="line.24"></a>
+<span class="sourceLineNo">025</span>                configuration.add(SymbolConstants.SUPPORTED_LOCALES, "en_US,fi");<a name="line.25"></a>
+<span class="sourceLineNo">026</span>                configuration.add(SymbolConstants.PRODUCTION_MODE, false);<a name="line.26"></a>
+<span class="sourceLineNo">027</span>        }<a name="line.27"></a>
+<span class="sourceLineNo">028</span><a name="line.28"></a>
+<span class="sourceLineNo">029</span>        @Primary @Contribute(RouteProvider.class)<a name="line.29"></a>
+<span class="sourceLineNo">030</span>        public static void addRoutes(OrderedConfiguration&lt;Route&gt; configuration, RouteFactory routeFactory) {<a name="line.30"></a>
+<span class="sourceLineNo">031</span><a name="line.31"></a>
+<span class="sourceLineNo">032</span>                String canonicalized = "subpackage/Unannotated";<a name="line.32"></a>
+<span class="sourceLineNo">033</span>                configuration.add(canonicalized.toLowerCase(), routeFactory.create("/not/annotated/{0}", canonicalized));<a name="line.33"></a>
+<span class="sourceLineNo">034</span><a name="line.34"></a>
+<span class="sourceLineNo">035</span>        }<a name="line.35"></a>
+<span class="sourceLineNo">036</span><a name="line.36"></a>
+<span class="sourceLineNo">037</span>}<a name="line.37"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>package org.tynamo.routing.services;<a name="line.1"></a>
+<span class="sourceLineNo">002</span><a name="line.2"></a>
+<span class="sourceLineNo">003</span>import org.apache.tapestry5.EventContext;<a name="line.3"></a>
+<span class="sourceLineNo">004</span>import org.apache.tapestry5.SymbolConstants;<a name="line.4"></a>
+<span class="sourceLineNo">005</span>import org.apache.tapestry5.internal.EmptyEventContext;<a name="line.5"></a>
+<span class="sourceLineNo">006</span>import org.apache.tapestry5.internal.URLEventContext;<a name="line.6"></a>
+<span class="sourceLineNo">007</span>import org.apache.tapestry5.ioc.annotations.Symbol;<a name="line.7"></a>
+<span class="sourceLineNo">008</span>import org.apache.tapestry5.services.*;<a name="line.8"></a>
+<span class="sourceLineNo">009</span>import org.slf4j.Logger;<a name="line.9"></a>
+<span class="sourceLineNo">010</span>import org.tynamo.routing.Route;<a name="line.10"></a>
+<span class="sourceLineNo">011</span><a name="line.11"></a>
+<span class="sourceLineNo">012</span>import java.util.regex.Matcher;<a name="line.12"></a>
+<span class="sourceLineNo">013</span><a name="line.13"></a>
+<span class="sourceLineNo">014</span>public class RouteDecoderImpl implements RouteDecoder {<a name="line.14"></a>
+<span class="sourceLineNo">015</span><a name="line.15"></a>
+<span class="sourceLineNo">016</span>        private static final char SLASH = '/';<a name="line.16"></a>
+<span class="sourceLineNo">017</span><a name="line.17"></a>
+<span class="sourceLineNo">018</span>        private final LocalizationSetter localizationSetter;<a name="line.18"></a>
+<span class="sourceLineNo">019</span>        private final boolean encodeLocaleIntoPath;<a name="line.19"></a>
+<span class="sourceLineNo">020</span>        private final String applicationFolder;<a name="line.20"></a>
+<span class="sourceLineNo">021</span><a name="line.21"></a>
+<span class="sourceLineNo">022</span>        private final URLEncoder urlEncoder;<a name="line.22"></a>
+<span class="sourceLineNo">023</span>        private final ContextValueEncoder valueEncoder;<a name="line.23"></a>
+<span class="sourceLineNo">024</span>        private final Logger logger;<a name="line.24"></a>
+<span class="sourceLineNo">025</span><a name="line.25"></a>
+<span class="sourceLineNo">026</span>        public RouteDecoderImpl(LocalizationSetter localizationSetter,<a name="line.26"></a>
+<span class="sourceLineNo">027</span>                                @Symbol(SymbolConstants.ENCODE_LOCALE_INTO_PATH) boolean encodeLocaleIntoPath,<a name="line.27"></a>
+<span class="sourceLineNo">028</span>                                @Symbol(SymbolConstants.APPLICATION_FOLDER) final String applicationFolder,<a name="line.28"></a>
+<span class="sourceLineNo">029</span>                                URLEncoder urlEncoder,<a name="line.29"></a>
+<span class="sourceLineNo">030</span>                                ContextValueEncoder valueEncoder,<a name="line.30"></a>
+<span class="sourceLineNo">031</span>                                Logger logger) {<a name="line.31"></a>
+<span class="sourceLineNo">032</span><a name="line.32"></a>
+<span class="sourceLineNo">033</span><a name="line.33"></a>
+<span class="sourceLineNo">034</span>                this.localizationSetter = localizationSetter;<a name="line.34"></a>
+<span class="sourceLineNo">035</span>                this.encodeLocaleIntoPath = encodeLocaleIntoPath;<a name="line.35"></a>
+<span class="sourceLineNo">036</span><a name="line.36"></a>
+<span class="sourceLineNo">037</span>                this.applicationFolder = applicationFolder.equals("") ? "" : SLASH + applicationFolder;<a name="line.37"></a>
+<span class="sourceLineNo">038</span><a name="line.38"></a>
+<span class="sourceLineNo">039</span>                this.urlEncoder = urlEncoder;<a name="line.39"></a>
+<span class="sourceLineNo">040</span>                this.valueEncoder = valueEncoder;<a name="line.40"></a>
+<span class="sourceLineNo">041</span>                this.logger = logger;<a name="line.41"></a>
+<span class="sourceLineNo">042</span>        }<a name="line.42"></a>
+<span class="sourceLineNo">043</span><a name="line.43"></a>
+<span class="sourceLineNo">044</span>        private String getLocaleFromPath(String path) {<a name="line.44"></a>
+<span class="sourceLineNo">045</span>                if (!encodeLocaleIntoPath) return null;<a name="line.45"></a>
+<span class="sourceLineNo">046</span>                // we have to get the possibly encoded locale from the request<a name="line.46"></a>
+<span class="sourceLineNo">047</span>                // the following was copied and modified from AppPageRenderLinkTransformer.decodePageRenderRequest(...)<a name="line.47"></a>
+<span class="sourceLineNo">048</span>                String[] split = path.substring(1).split("/");<a name="line.48"></a>
+<span class="sourceLineNo">049</span>                if (split.length &gt; 0 &amp;&amp; !"".equals(split[0])) {<a name="line.49"></a>
+<span class="sourceLineNo">050</span>                        String possibleLocaleName = split[0];<a name="line.50"></a>
+<span class="sourceLineNo">051</span>                        // Might be just the page activation context, or it might be locale then page<a name="line.51"></a>
+<span class="sourceLineNo">052</span>                        // activation context<a name="line.52"></a>
+<span class="sourceLineNo">053</span>                        return localizationSetter.isSupportedLocaleName(possibleLocaleName) ? possibleLocaleName : null;<a name="line.53"></a>
+<span class="sourceLineNo">054</span>                }<a name="line.54"></a>
+<span class="sourceLineNo">055</span>                return null;<a name="line.55"></a>
+<span class="sourceLineNo">056</span>        }<a name="line.56"></a>
+<span class="sourceLineNo">057</span><a name="line.57"></a>
+<span class="sourceLineNo">058</span>        private String removeAppFolderAndLocaleFromPath(final Request request) {<a name="line.58"></a>
+<span class="sourceLineNo">059</span><a name="line.59"></a>
+<span class="sourceLineNo">060</span>                String path = request.getPath();<a name="line.60"></a>
+<span class="sourceLineNo">061</span><a name="line.61"></a>
+<span class="sourceLineNo">062</span>                if (this.applicationFolder.length() &gt; 0) {<a name="line.62"></a>
+<span class="sourceLineNo">063</span>                        path = path.substring(applicationFolder.length());<a name="line.63"></a>
+<span class="sourceLineNo">064</span>                }<a name="line.64"></a>
+<span class="sourceLineNo">065</span><a name="line.65"></a>
+<span class="sourceLineNo">066</span>                String locale = getLocaleFromPath(path);<a name="line.66"></a>
+<span class="sourceLineNo">067</span><a name="line.67"></a>
+<span class="sourceLineNo">068</span>                if (locale != null) {<a name="line.68"></a>
+<span class="sourceLineNo">069</span>                        localizationSetter.setLocaleFromLocaleName(locale);<a name="line.69"></a>
+<span class="sourceLineNo">070</span>                        path = path.substring(locale.length() + 1);<a name="line.70"></a>
+<span class="sourceLineNo">071</span>                }<a name="line.71"></a>
+<span class="sourceLineNo">072</span>                return path.length() &gt; 1 &amp;&amp; path.charAt(path.length() - 1) == '/' ? path.substring(0, path.length() - 1) : path;<a name="line.72"></a>
+<span class="sourceLineNo">073</span>        }<a name="line.73"></a>
+<span class="sourceLineNo">074</span><a name="line.74"></a>
+<span class="sourceLineNo">075</span>        @Override<a name="line.75"></a>
+<span class="sourceLineNo">076</span>        public PageRenderRequestParameters decodePageRenderRequest(final Route route, final Request request) {<a name="line.76"></a>
+<span class="sourceLineNo">077</span><a name="line.77"></a>
+<span class="sourceLineNo">078</span>                Matcher matcher = route.getPattern().matcher(removeAppFolderAndLocaleFromPath(request));<a name="line.78"></a>
+<span class="sourceLineNo">079</span>                if (!matcher.matches()) return null;<a name="line.79"></a>
+<span class="sourceLineNo">080</span><a name="line.80"></a>
+<span class="sourceLineNo">081</span>                EventContext context;<a name="line.81"></a>
+<span class="sourceLineNo">082</span><a name="line.82"></a>
+<span class="sourceLineNo">083</span>                int groupsSize = matcher.groupCount();<a name="line.83"></a>
+<span class="sourceLineNo">084</span><a name="line.84"></a>
+<span class="sourceLineNo">085</span>                if (groupsSize &lt; 1) {<a name="line.85"></a>
+<span class="sourceLineNo">086</span>                        context = new EmptyEventContext();<a name="line.86"></a>
+<span class="sourceLineNo">087</span>                } else {<a name="line.87"></a>
+<span class="sourceLineNo">088</span><a name="line.88"></a>
+<span class="sourceLineNo">089</span>                        String[] split = new String[groupsSize];<a name="line.89"></a>
+<span class="sourceLineNo">090</span><a name="line.90"></a>
+<span class="sourceLineNo">091</span>                        for (int i = 0; i &lt; groupsSize; i++) {<a name="line.91"></a>
+<span class="sourceLineNo">092</span>                                String value = matcher.group(i + 1);<a name="line.92"></a>
+<span class="sourceLineNo">093</span>                                split[i] = urlEncoder.decode(value);<a name="line.93"></a>
+<span class="sourceLineNo">094</span>                        }<a name="line.94"></a>
+<span class="sourceLineNo">095</span><a name="line.95"></a>
+<span class="sourceLineNo">096</span>                        context = new URLEventContext(valueEncoder, split);<a name="line.96"></a>
+<span class="sourceLineNo">097</span>                }<a name="line.97"></a>
+<span class="sourceLineNo">098</span><a name="line.98"></a>
+<span class="sourceLineNo">099</span>                if (logger.isDebugEnabled())<a name="line.99"></a>
+<span class="sourceLineNo">100</span>                        logger.debug("decoding render request using route: \"" + route.getPathExpression() + "\" for page: " + route.getCanonicalizedPageName());<a name="line.100"></a>
+<span class="sourceLineNo">101</span><a name="line.101"></a>
+<span class="sourceLineNo">102</span>                return new PageRenderRequestParameters(route.getCanonicalizedPageName(), context, false);<a name="line.102"></a>
+<span class="sourceLineNo">103</span><a name="line.103"></a>
+<span class="sourceLineNo">104</span>        }<a name="line.104"></a>
+<span class="sourceLineNo">105</span>}<a name="line.105"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>
