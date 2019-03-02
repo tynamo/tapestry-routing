@@ -7,6 +7,7 @@ import org.apache.tapestry5.services.transform.ComponentClassTransformWorker2;
 import org.apache.tapestry5.services.transform.TransformationSupport;
 import org.tynamo.routing.annotations.At;
 import org.tynamo.routing.annotations.Route;
+import org.tynamo.routing.Behavior;
 
 public class RouteWorker implements ComponentClassTransformWorker2 {
 
@@ -25,14 +26,17 @@ public class RouteWorker implements ComponentClassTransformWorker2 {
 
 		String pathExpression = null;
 		String[] order = {};
+		Behavior behavior = Behavior.DEFAULT;
 
 		if (plasticClass.hasAnnotation(At.class)) {
 			At ann = plasticClass.getAnnotation(At.class);
 			pathExpression = ann.value();
+			behavior = ann.behavior();
 			order = ann.order();
 		} else if (plasticClass.hasAnnotation(Route.class)) {
 			Route ann = plasticClass.getAnnotation(Route.class);
 			pathExpression = ann.value();
+			behavior = ann.behavior();
 			order = ann.order();
 		}
 
@@ -40,7 +44,7 @@ public class RouteWorker implements ComponentClassTransformWorker2 {
 			String pageName = componentClassResolver.resolvePageClassNameToPageName(plasticClass.getClassName());
 			String canonicalized = componentClassResolver.canonicalizePageName(pageName);
 
-			org.tynamo.routing.Route route = routeFactory.create(pathExpression, canonicalized);
+			org.tynamo.routing.Route route = routeFactory.create(pathExpression, canonicalized, behavior);
 
 			annotatedPagesManager.add(route, order);
 		}

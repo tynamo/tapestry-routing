@@ -17,6 +17,7 @@ import java.util.Locale;
 public class RouterLinkTransformer implements PageRenderLinkTransformer {
 
 	private static final char SLASH = '/';
+	private static final int BUFFER_SIZE = 100;
 
 	private final RouteSource routeSource;
 	private final Request request;
@@ -24,11 +25,9 @@ public class RouterLinkTransformer implements PageRenderLinkTransformer {
 	private final Response response;
 	private final ContextPathEncoder contextPathEncoder;
 	private final BaseURLSource baseURLSource;
+	private final PersistentLocale persistentLocale;
+	private final boolean encodeLocaleIntoPath;
 	private final String applicationFolder;
-
-	private static final int BUFFER_SIZE = 100;
-	private PersistentLocale persistentLocale;
-	private boolean encodeLocaleIntoPath;
 
 	public RouterLinkTransformer(RouteSource routeSource,
 	                             Request request,
@@ -54,7 +53,6 @@ public class RouterLinkTransformer implements PageRenderLinkTransformer {
 	}
 
 	public Link transformPageRenderLink(Link defaultLink, PageRenderRequestParameters parameters) {
-
 		String activePageName = parameters.getLogicalPageName();
 
 		Route route = routeSource.getRoute(activePageName);
@@ -86,8 +84,7 @@ public class RouterLinkTransformer implements PageRenderLinkTransformer {
 		return null;
 	}
 
-	private void encodeAppFolderAndLocale(StringBuilder builder)
-	{
+	private void encodeAppFolderAndLocale(StringBuilder builder) {
 		if (!applicationFolder.equals(""))
 		{
 			builder.append(SLASH).append(applicationFolder);
@@ -106,7 +103,6 @@ public class RouterLinkTransformer implements PageRenderLinkTransformer {
 	}
 
 	private String[] encode(EventContext context) {
-
 		assert context != null;
 		int count = context.getCount();
 

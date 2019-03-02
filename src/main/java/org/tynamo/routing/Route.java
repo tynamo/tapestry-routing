@@ -12,13 +12,14 @@ public class Route {
 	private static final String URI_PARAM_REGEX = "\\{\\s*(" + URI_PARAM_NAME_REGEX + ")\\s*(:\\s*(" + URI_PARAM_REGEX_REGEX + "))?\\}";
 	private static final Pattern URI_PARAM_PATTERN = Pattern.compile(URI_PARAM_REGEX);
 
-	private final String canonicalizedPageName;
 	private final String pathExpression;
+	private final String canonicalizedPageName;
+	private final Behavior behavior;
 	private final Pattern pattern;
 
-	public Route(final String pathExpression, final String canonicalizedPageName) {
-
+	public Route(final String pathExpression, final String canonicalizedPageName, final Behavior behavior) {
 		this.canonicalizedPageName = canonicalizedPageName;
+		this.behavior = behavior;
 
 		// remove ending slash unless it's the root path
 		this.pathExpression = pathExpression.length() > 1 && pathExpression.charAt(pathExpression.length() - 1) == SLASH ? pathExpression.substring(0, pathExpression.length() - 1) : pathExpression;
@@ -31,11 +32,9 @@ public class Route {
 
 		String regex = buildExpression(this.pathExpression);
 		pattern = Pattern.compile(regex);
-
 	}
 
 	static String buildExpression(String expression) {
-
 		String[] split = URI_PARAM_PATTERN.split(expression);
 		Matcher withPathParam = URI_PARAM_PATTERN.matcher(expression);
 		int i = 0;
@@ -64,6 +63,10 @@ public class Route {
 
 	public String getCanonicalizedPageName() {
 		return canonicalizedPageName;
+	}
+
+	public Behavior getBehavior() {
+		return behavior;
 	}
 
 	public Pattern getPattern() {
