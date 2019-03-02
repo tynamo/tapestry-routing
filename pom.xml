@@ -31,7 +31,7 @@
 	</distributionManagement>
 
 	<properties>
-		<tapestry-release-version>5.4-beta-26</tapestry-release-version>
+		<tapestry-release-version>5.4.4</tapestry-release-version>
 	</properties>
 
 	<build>
