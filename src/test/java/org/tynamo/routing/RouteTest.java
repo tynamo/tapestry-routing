@@ -15,7 +15,7 @@ import org.tynamo.routing.pages.Home;
 import org.tynamo.routing.pages.SimplePage;
 import org.tynamo.routing.pages.SubFolderHome;
 import org.tynamo.routing.pages.subpackage.SubPackageMain;
-import org.tynamo.routing.pages.subpackage.SubPage;
+import org.tynamo.routing.pages.subpackage.SubPage1;
 import org.tynamo.routing.pages.subpackage.UnannotatedPage;
 import org.tynamo.routing.services.RouterDispatcher;
 
@@ -150,7 +150,7 @@ public class RouteTest extends RoutingTestCase {
 
 	@Test
 	public void subpackage() {
-		testPageRenderLinkGeneration("/subpackage/inventedpath", SubPage.class, "/subpackage/inventedpath", EMPTY_PATH, NO_CONTEXT);
+		testPageRenderLinkGeneration("/subpackage/inventedpath", SubPage1.class, "/subpackage/inventedpath", EMPTY_PATH, NO_CONTEXT);
 	}
 
 	@Test
