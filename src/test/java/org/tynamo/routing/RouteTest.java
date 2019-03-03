@@ -176,6 +176,7 @@ public class RouteTest extends RoutingTestCase {
 		PageRenderRequestParameters expectedParameters = new PageRenderRequestParameters("subpackage/SubPageFirst", new EmptyEventContext(), false);
 
 		expect(request.getPath()).andReturn("/subpackage/inventedpath").atLeastOnce();
+		expect(request.getParameter("t:lb")).andReturn(null).atLeastOnce();
 		expect(request.getLocale()).andReturn(FI).atLeastOnce();
 		requestHandler.handlePageRender(expectedParameters);
 
@@ -251,7 +252,7 @@ public class RouteTest extends RoutingTestCase {
 		Request request = mockRequest();
 		Response response = null;
 
-		expect(request.getPath()).andReturn("/subpackageWithIndex/SubPackageMain").atLeastOnce();
+		expect(request.getPath()).andReturn("/foo/0/bar/1").atLeastOnce();
 		expect(request.getParameter("t:lb")).andReturn(null).atLeastOnce();
 		expect(request.getLocale()).andReturn(FI).atLeastOnce();
 
@@ -265,8 +266,8 @@ public class RouteTest extends RoutingTestCase {
 		RequestGlobals globals = registry.getService(RequestGlobals.class);
 		globals.storeRequestResponse(request, response);
 
-		Assert.assertTrue(dispatcher.dispatch(request, response), "SubPackageMain should take precedence over the subpackageWithIndex/Index page");
-		Assert.assertEquals(parameters.getValue().getLogicalPageName(), "subpackageWithIndex/SubPackageMain", "SubPackageMain should take precedence over the subpackageWithIndex/Index page");
+		Assert.assertTrue(dispatcher.dispatch(request, response), "Simple should take precedence over the Index page");
+		Assert.assertEquals(parameters.getValue().getLogicalPageName(), "Simple", "Simple should take precedence over the Index page");
 
 		verify();
 	}
@@ -281,7 +282,8 @@ public class RouteTest extends RoutingTestCase {
 		Request request = mockRequest();
 		Response response = null;
 
-		expect(request.getPath()).andReturn("/foo/0/bar/1").atLeastOnce();
+		expect(request.getPath()).andReturn("/subpackage").atLeastOnce();
+		expect(request.getParameter("t:lb")).andReturn(null).atLeastOnce();
 		expect(request.getLocale()).andReturn(FI).atLeastOnce();
 
 		Capture<PageRenderRequestParameters> parameters = newCapture();
@@ -294,8 +296,8 @@ public class RouteTest extends RoutingTestCase {
 		RequestGlobals globals = registry.getService(RequestGlobals.class);
 		globals.storeRequestResponse(request, response);
 
-		Assert.assertTrue(dispatcher.dispatch(request, response), "SimplePage route should be dispatched");
-		Assert.assertEquals(parameters.getValue().getLogicalPageName(), "Simple", "SimplePage route should be dispatched");
+		Assert.assertTrue(dispatcher.dispatch(request, response), "SubPackageMain route should be dispatched");
+		Assert.assertEquals(parameters.getValue().getLogicalPageName(), "subpackage/Main", "SubPackageMain route should be dispatched");
 
 		verify();
 	}

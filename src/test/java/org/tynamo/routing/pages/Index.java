@@ -1,8 +1,8 @@
-package org.tynamo.routing.pages.subpackageWithIndex;
+package org.tynamo.routing.pages;
 
 import org.tynamo.routing.annotations.At;
 
-@At("/subpackageWithIndex")
+@At("/root-index")
 public class Index {
 	protected void onActivate() {
 	}
