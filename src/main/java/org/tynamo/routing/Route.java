@@ -1,5 +1,7 @@
 package org.tynamo.routing;
 
+import org.apache.tapestry5.services.LocalizationSetter;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

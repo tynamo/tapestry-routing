@@ -7,7 +7,12 @@ import org.apache.tapestry5.TapestryConstants;
 import org.apache.tapestry5.internal.services.LinkImpl;
 import org.apache.tapestry5.internal.services.RequestSecurityManager;
 import org.apache.tapestry5.ioc.annotations.Symbol;
-import org.apache.tapestry5.services.*;
+import org.apache.tapestry5.services.BaseURLSource;
+import org.apache.tapestry5.services.ContextPathEncoder;
+import org.apache.tapestry5.services.PageRenderRequestParameters;
+import org.apache.tapestry5.services.PersistentLocale;
+import org.apache.tapestry5.services.Request;
+import org.apache.tapestry5.services.Response;
 import org.apache.tapestry5.services.linktransform.PageRenderLinkTransformer;
 import org.tynamo.routing.Route;
 
@@ -26,6 +31,7 @@ public class RouterLinkTransformer implements PageRenderLinkTransformer {
 	private final ContextPathEncoder contextPathEncoder;
 	private final BaseURLSource baseURLSource;
 	private final PersistentLocale persistentLocale;
+	private final String contextPath;
 	private final boolean encodeLocaleIntoPath;
 	private final String applicationFolder;
 
@@ -34,6 +40,7 @@ public class RouterLinkTransformer implements PageRenderLinkTransformer {
 	                             RequestSecurityManager requestSecurityManager, Response response,
 	                             ContextPathEncoder contextPathEncoder, BaseURLSource baseURLSource,
 	                             PersistentLocale persistentLocale,
+	                             @Symbol(SymbolConstants.CONTEXT_PATH) final String contextPath,
 	                             @Symbol(SymbolConstants.ENCODE_LOCALE_INTO_PATH) boolean encodeLocaleIntoPath,
 	                             @Symbol(SymbolConstants.APPLICATION_FOLDER) final String applicationFolder) {
 		this.routeSource = routeSource;
@@ -43,6 +50,7 @@ public class RouterLinkTransformer implements PageRenderLinkTransformer {
 		this.contextPathEncoder = contextPathEncoder;
 		this.baseURLSource = baseURLSource;
 		this.persistentLocale = persistentLocale;
+		this.contextPath = contextPath;
 		this.encodeLocaleIntoPath = encodeLocaleIntoPath;
 		this.applicationFolder = applicationFolder;
 	}
@@ -60,9 +68,9 @@ public class RouterLinkTransformer implements PageRenderLinkTransformer {
 		if (route != null) {
 			StringBuilder builder = new StringBuilder(BUFFER_SIZE);
 
-			if (!"".equals(request.getContextPath())) {
+			if (!"".equals(contextPath)) {
 				// Build up the absolute URI.
-				builder.append(request.getContextPath());
+				builder.append(contextPath);
 			}
 
 			encodeAppFolderAndLocale(builder);

@@ -1,13 +1,15 @@
 package org.tynamo.routing.services;
 
 import org.apache.tapestry5.annotations.Log;
-import org.apache.tapestry5.ioc.annotations.Primary;
-import org.apache.tapestry5.services.*;
+import org.apache.tapestry5.services.ComponentEventLinkEncoder;
+import org.apache.tapestry5.services.ComponentRequestHandler;
+import org.apache.tapestry5.services.Dispatcher;
+import org.apache.tapestry5.services.PageRenderRequestParameters;
+import org.apache.tapestry5.services.Request;
+import org.apache.tapestry5.services.Response;
+import org.tynamo.routing.Route;
 
 import java.io.IOException;
-
-import org.tynamo.routing.Route;
-import org.tynamo.routing.Behavior;
 
 /**
  * The router dispatcher recognizes incoming requests and transforms them into page render requests.
@@ -38,8 +40,8 @@ public class RouterDispatcher implements Dispatcher {
 			return handleRoute(pageParametersRoute, pageParameters, request, response);
 		}
 		if (routeParametersRoute != null) {
-			boolean handled = handleRoute(routeParametersRoute, routeParameters, request, response);
-			if (handled) return true;
+			componentRequestHandler.handlePageRender(routeParameters);
+			return true;
 		}
 		if (pageParametersRoute != null) {
 			boolean handled = handleRoute(pageParametersRoute, pageParameters, request, response);
@@ -50,10 +52,6 @@ public class RouterDispatcher implements Dispatcher {
 	}
 
 	private boolean handleRoute(Route route, PageRenderRequestParameters parameters, Request request, Response response) throws IOException {
-		if (route.getPattern().matcher(request.getPath()).matches()) {
-			componentRequestHandler.handlePageRender(parameters);
-			return true;
-		}
 		switch (route.getBehavior()) {
 			case REDIRECT:
 				response.sendRedirect(linkEncoder.createPageRenderLink(parameters).toAbsoluteURI());

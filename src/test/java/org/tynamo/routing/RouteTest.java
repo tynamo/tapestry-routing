@@ -317,7 +317,6 @@ public class RouteTest extends RoutingTestCase {
 		expect(request.getParameter("t:lb")).andReturn(null).atLeastOnce();
 		expect(request.getLocale()).andReturn(FI).atLeastOnce();
 		expect(request.isSecure()).andReturn(true).atLeastOnce();
-		expect(request.getContextPath()).andReturn(EMPTY_PATH).atLeastOnce();
 		expect(request.getServerName()).andReturn(SERVER_NAME).atLeastOnce();
 		expect(request.getServerPort()).andReturn(SERVER_PORT).atLeastOnce();
 		expect(response.encodeURL(expectedURL)).andReturn(expectedURL).atLeastOnce();
