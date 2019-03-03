@@ -20,7 +20,7 @@ public class RouterDispatcherWithAutoDiscoveryTest extends TapestryTestCase {
 		Registry registry = getRegistry(TapestryModule.class, RoutingModule.class, TestsModule.class);
 
 		AnnotatedPagesManager provider = registry.getService(AnnotatedPagesManager.class);
-		Assert.assertEquals(provider.getRoutes().size(), 7, "there are seven pages with Routes in org/tynamo/routing");
+		Assert.assertEquals(provider.getRoutes().size(), 10, "there are ten pages with Routes in org/tynamo/routing");
 
 		registry.cleanupThread();
 		registry.shutdown();

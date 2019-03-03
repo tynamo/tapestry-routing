@@ -114,7 +114,6 @@ public abstract class RoutingTestCase extends TapestryTestCase {
 
 		Request request = mockRequest();
 		expect(request.getPath()).andReturn(requestPath).atLeastOnce();
-		expect(request.getContextPath()).andReturn(contextPath).atLeastOnce();
 
 		Response response = mockResponse();
 		train_encodeURL(response, expectedURI, expectedURI);
@@ -132,7 +131,7 @@ public abstract class RoutingTestCase extends TapestryTestCase {
 		Assert.assertEquals(parameters.getActivationContext().getCount(), activationContextCount);
 
 		RouterLinkTransformer linkTransformer = new RouterLinkTransformer(routeSource, request, securityManager,
-				response, contextPathEncoder, null, persistentLocale, encodeLocaleIntoPath, applicationFolder);
+				response, contextPathEncoder, null, persistentLocale, contextPath, encodeLocaleIntoPath, applicationFolder);
 
 		Assert.assertEquals(linkTransformer.transformPageRenderLink(null, parameters).toURI(), expectedURI);
 	}

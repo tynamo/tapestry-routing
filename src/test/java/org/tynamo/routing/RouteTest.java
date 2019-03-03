@@ -5,6 +5,7 @@ import org.apache.tapestry5.internal.InternalConstants;
 import org.apache.tapestry5.internal.services.PageRenderDispatcher;
 import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.apache.tapestry5.services.*;
+import org.apache.tapestry5.Link;
 import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.testng.Assert;
@@ -27,6 +28,8 @@ import java.util.regex.Pattern;
 
 public class RouteTest extends RoutingTestCase {
 
+	private static final String SERVER_NAME = "test";
+	private static final int SERVER_PORT = 8080;
 	private static final String EMPTY_PATH = "";
 	private static final int NO_CONTEXT = 0;
 	private static final String APPLICATION_FOLDER = "";
@@ -39,7 +42,6 @@ public class RouteTest extends RoutingTestCase {
 
 	@Test
 	public void regular_expressions() {
-
 		String path = "/foo/52";
 
 		String routeExpression = Route.buildExpression("/foo/{0}");
@@ -75,7 +77,6 @@ public class RouteTest extends RoutingTestCase {
 		Assert.assertEquals(parameters.getActivationContext().getCount(), 2);
 		Assert.assertEquals(parameters.getActivationContext().get(Integer.class, 0).intValue(), 45);
 		Assert.assertEquals(parameters.getActivationContext().get(Integer.class, 1).intValue(), 24);
-
 	}
 
 	@Test
@@ -165,17 +166,24 @@ public class RouteTest extends RoutingTestCase {
 
 	@Test
 	public void order() throws IOException {
+		ComponentRequestHandler requestHandler = mockComponentRequestHandler();
+		ComponentEventLinkEncoder linkEncoder = getService(ComponentEventLinkEncoder.class);
+
+		RouterDispatcher routerDispatcher = new RouterDispatcher(requestHandler, linkEncoder, routeSource);
 
 		Request request = mockRequest();
-		expect(request.getPath()).andReturn("/subpackage/inventedpath").atLeastOnce();
-
+		Response response = null;
 		PageRenderRequestParameters expectedParameters = new PageRenderRequestParameters("subpackage/SubPageFirst", new EmptyEventContext(), false);
-		ComponentRequestHandler requestHandler = mockComponentRequestHandler();
+
+		expect(request.getPath()).andReturn("/subpackage/inventedpath").atLeastOnce();
+		expect(request.getParameter("t:lb")).andReturn(null).atLeastOnce();
+		expect(request.getLocale()).andReturn(FI).atLeastOnce();
 		requestHandler.handlePageRender(expectedParameters);
 
-		RouterDispatcher routerDispatcher = new RouterDispatcher(requestHandler, routeSource);
-
 		replay();
+
+		RequestGlobals globals = registry.getService(RequestGlobals.class);
+		globals.storeRequestResponse(request, response);
 
 		routerDispatcher.dispatch(request, null);
 
@@ -183,12 +191,37 @@ public class RouteTest extends RoutingTestCase {
 	}
 
 	@Test
-	public void PageRender_precedence_over_RouterDispatcher() throws IOException {
-
+	public void page_without_route_is_not_dispatched() throws IOException {
 		ComponentEventLinkEncoder linkEncoder = getService(ComponentEventLinkEncoder.class);
-		ComponentRequestHandler handler = mockComponentRequestHandler();
+		ComponentRequestHandler requestHandler = mockComponentRequestHandler();
 
-		Dispatcher dispatcher = new PageRenderDispatcher(handler, linkEncoder);
+		Dispatcher dispatcher = new RouterDispatcher(requestHandler, linkEncoder, routeSource);
+
+		Request request = mockRequest();
+		Response response = null;
+
+		expect(request.getPath()).andReturn("/subpackage/unannotated").atLeastOnce();
+		expect(request.getParameter("t:lb")).andReturn(null).atLeastOnce();
+		expect(request.getLocale()).andReturn(FI).atLeastOnce();
+
+		EasyMock.expectLastCall();
+
+		replay();
+
+		RequestGlobals globals = registry.getService(RequestGlobals.class);
+		globals.storeRequestResponse(request, response);
+
+		Assert.assertFalse(dispatcher.dispatch(request, response), "Unannotated page should not be dispatched");
+
+		verify();
+	}
+
+	@Test
+	public void page_precede_over_route() throws IOException {
+		ComponentEventLinkEncoder linkEncoder = getService(ComponentEventLinkEncoder.class);
+		ComponentRequestHandler requestHandler = mockComponentRequestHandler();
+
+		Dispatcher dispatcher = new RouterDispatcher(requestHandler, linkEncoder, routeSource);
 
 		Request request = mockRequest();
 		Response response = null;
@@ -196,11 +229,105 @@ public class RouteTest extends RoutingTestCase {
 		expect(request.getPath()).andReturn("/home").atLeastOnce();
 		expect(request.getParameter("t:lb")).andReturn(null).atLeastOnce();
 		expect(request.getLocale()).andReturn(FI).atLeastOnce();
-		expect(request.getAttribute(InternalConstants.REFERENCED_COMPONENT_NOT_FOUND)).andReturn(null).once();
+
+		EasyMock.expectLastCall();
+
+		replay();
+
+		RequestGlobals globals = registry.getService(RequestGlobals.class);
+		globals.storeRequestResponse(request, response);
+
+		Assert.assertFalse(dispatcher.dispatch(request, response), "Home page should take precedence over the '/home' route in the Inaccessible page");
+
+		verify();
+	}
+
+	@Test
+	public void route_precede_over_index() throws IOException {
+		ComponentEventLinkEncoder linkEncoder = getService(ComponentEventLinkEncoder.class);
+		ComponentRequestHandler requestHandler = mockComponentRequestHandler();
+
+		Dispatcher dispatcher = new RouterDispatcher(requestHandler, linkEncoder, routeSource);
+
+		Request request = mockRequest();
+		Response response = null;
+
+		expect(request.getPath()).andReturn("/foo/45/bar/24").atLeastOnce();
+		expect(request.getParameter("t:lb")).andReturn(null).atLeastOnce();
+		expect(request.getLocale()).andReturn(FI).atLeastOnce();
 
 		Capture<PageRenderRequestParameters> parameters = newCapture();
 
-		handler.handlePageRender(EasyMock.capture(parameters)); EasyMock.expectLastCall();
+		requestHandler.handlePageRender(EasyMock.capture(parameters));
+		EasyMock.expectLastCall();
+
+		replay();
+
+		RequestGlobals globals = registry.getService(RequestGlobals.class);
+		globals.storeRequestResponse(request, response);
+
+		Assert.assertTrue(dispatcher.dispatch(request, response), "Simple should take precedence over the Index page");
+		Assert.assertEquals(parameters.getValue().getLogicalPageName(), "Simple", "Simple should take precedence over the Index page");
+		Assert.assertEquals(parameters.getValue().getActivationContext().getCount(), 2, "Simple should receive activation context parameters");
+		Assert.assertEquals((int) parameters.getValue().getActivationContext().get(Integer.class, 0), 45, "Simple should receive activation context parameters");
+		Assert.assertEquals((int) parameters.getValue().getActivationContext().get(Integer.class, 1), 24, "Simple should receive activation context parameters");
+
+		verify();
+	}
+
+	@Test
+	public void route_path_is_dispatched() throws IOException {
+		ComponentEventLinkEncoder linkEncoder = getService(ComponentEventLinkEncoder.class);
+		ComponentRequestHandler requestHandler = mockComponentRequestHandler();
+
+		Dispatcher dispatcher = new RouterDispatcher(requestHandler, linkEncoder, routeSource);
+
+		Request request = mockRequest();
+		Response response = null;
+
+		expect(request.getPath()).andReturn("/subpackage").atLeastOnce();
+		expect(request.getParameter("t:lb")).andReturn(null).atLeastOnce();
+		expect(request.getLocale()).andReturn(FI).atLeastOnce();
+
+		Capture<PageRenderRequestParameters> parameters = newCapture();
+
+		requestHandler.handlePageRender(EasyMock.capture(parameters));
+		EasyMock.expectLastCall();
+
+		replay();
+
+		RequestGlobals globals = registry.getService(RequestGlobals.class);
+		globals.storeRequestResponse(request, response);
+
+		Assert.assertTrue(dispatcher.dispatch(request, response), "SubPackageMain route should be dispatched");
+		Assert.assertEquals(parameters.getValue().getLogicalPageName(), "subpackage/Main", "SubPackageMain route should be dispatched");
+
+		verify();
+	}
+
+	@Test
+	public void redirect_behavior() throws IOException {
+		ComponentEventLinkEncoder linkEncoder = getService(ComponentEventLinkEncoder.class);
+		ComponentRequestHandler requestHandler = mockComponentRequestHandler();
+
+		Dispatcher dispatcher = new RouterDispatcher(requestHandler, linkEncoder, routeSource);
+
+		Request request = mockRequest();
+		Response response = mockResponse();
+		String expectedURL = String.format("https://%s:%d/redirect-behavior", SERVER_NAME, SERVER_PORT);
+
+		expect(request.getPath()).andReturn("/redirectbehavior").atLeastOnce();
+		expect(request.getParameter("t:lb")).andReturn(null).atLeastOnce();
+		expect(request.getLocale()).andReturn(FI).atLeastOnce();
+		expect(request.isSecure()).andReturn(true).atLeastOnce();
+		expect(request.getServerName()).andReturn(SERVER_NAME).atLeastOnce();
+		expect(request.getServerPort()).andReturn(SERVER_PORT).atLeastOnce();
+		expect(response.encodeURL(expectedURL)).andReturn(expectedURL).atLeastOnce();
+
+		Capture<String> url = newCapture();
+
+		response.sendRedirect(EasyMock.capture(url));
+		EasyMock.expectLastCall();
 
 		replay();
 
@@ -208,8 +335,38 @@ public class RouteTest extends RoutingTestCase {
 		globals.storeRequestResponse(request, response);
 
 		Assert.assertTrue(dispatcher.dispatch(request, response));
-		Assert.assertEquals(parameters.getValue().getLogicalPageName(), "Home", "Home page should take precedence over the '/home' route in the Inaccessible page");
-		Assert.assertEquals(parameters.getValue().getActivationContext().getCount(), 0);
+		Assert.assertEquals(url.getValue(), expectedURL, "Redirect behavior is applied when page default convention path is provided");
+
+		verify();
+	}
+
+	@Test
+	public void not_found_behavior() throws IOException {
+		ComponentEventLinkEncoder linkEncoder = getService(ComponentEventLinkEncoder.class);
+		ComponentRequestHandler requestHandler = mockComponentRequestHandler();
+
+		Dispatcher dispatcher = new RouterDispatcher(requestHandler, linkEncoder, routeSource);
+
+		Request request = mockRequest();
+		Response response = mockResponse();
+
+		expect(request.getPath()).andReturn("/notfoundbehavior").atLeastOnce();
+		expect(request.getParameter("t:lb")).andReturn(null).atLeastOnce();
+		expect(request.getLocale()).andReturn(FI).atLeastOnce();
+
+		Capture<Integer> errorCode = newCapture();
+		Capture<String> message = newCapture();
+
+		response.sendError(EasyMock.captureInt(errorCode), EasyMock.capture(message));
+		EasyMock.expectLastCall();
+
+		replay();
+
+		RequestGlobals globals = registry.getService(RequestGlobals.class);
+		globals.storeRequestResponse(request, response);
+
+		Assert.assertTrue(dispatcher.dispatch(request, response));
+		Assert.assertEquals((int) errorCode.getValue(), 404, "Not found behavior is applied when page default convention path is provided");
 
 		verify();
 	}

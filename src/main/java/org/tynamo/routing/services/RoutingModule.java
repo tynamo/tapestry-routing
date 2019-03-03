@@ -33,7 +33,7 @@ public class RoutingModule {
 
 	public static void contributeMasterDispatcher(OrderedConfiguration<Dispatcher> configuration,
 	                                              @Autobuild RouterDispatcher dispatcher) {
-		configuration.add(RouterDispatcher.class.getSimpleName(), dispatcher, "after:PageRender");
+		configuration.add(RouterDispatcher.class.getSimpleName(), dispatcher, "after:ComponentEvent", "before:PageRender");
 	}
 
 	@Contribute(SymbolProvider.class)

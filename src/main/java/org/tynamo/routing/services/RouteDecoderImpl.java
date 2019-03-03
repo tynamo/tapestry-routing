@@ -30,7 +30,6 @@ public class RouteDecoderImpl implements RouteDecoder {
 	                        ContextValueEncoder valueEncoder,
 	                        Logger logger) {
 
-
 		this.localizationSetter = localizationSetter;
 		this.encodeLocaleIntoPath = encodeLocaleIntoPath;
 
@@ -56,7 +55,6 @@ public class RouteDecoderImpl implements RouteDecoder {
 	}
 
 	private String removeAppFolderAndLocaleFromPath(final Request request) {
-
 		String path = request.getPath();
 
 		if (this.applicationFolder.length() > 0) {
@@ -74,7 +72,6 @@ public class RouteDecoderImpl implements RouteDecoder {
 
 	@Override
 	public PageRenderRequestParameters decodePageRenderRequest(final Route route, final Request request) {
-
 		Matcher matcher = route.getPattern().matcher(removeAppFolderAndLocaleFromPath(request));
 		if (!matcher.matches()) return null;
 

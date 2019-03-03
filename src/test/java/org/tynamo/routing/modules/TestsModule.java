@@ -28,10 +28,7 @@ public class TestsModule {
 
 	@Primary @Contribute(RouteProvider.class)
 	public static void addRoutes(OrderedConfiguration<Route> configuration, RouteFactory routeFactory) {
-
 		String canonicalized = "subpackage/Unannotated";
 		configuration.add(canonicalized.toLowerCase(), routeFactory.create("/not/annotated/{0}", canonicalized));
-
 	}
-
 }
