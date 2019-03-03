@@ -252,7 +252,7 @@ public class RouteTest extends RoutingTestCase {
 		Request request = mockRequest();
 		Response response = null;
 
-		expect(request.getPath()).andReturn("/foo/0/bar/1").atLeastOnce();
+		expect(request.getPath()).andReturn("/foo/45/bar/24").atLeastOnce();
 		expect(request.getParameter("t:lb")).andReturn(null).atLeastOnce();
 		expect(request.getLocale()).andReturn(FI).atLeastOnce();
 
@@ -268,6 +268,9 @@ public class RouteTest extends RoutingTestCase {
 
 		Assert.assertTrue(dispatcher.dispatch(request, response), "Simple should take precedence over the Index page");
 		Assert.assertEquals(parameters.getValue().getLogicalPageName(), "Simple", "Simple should take precedence over the Index page");
+		Assert.assertEquals(parameters.getValue().getActivationContext().getCount(), 2, "Simple should receive activation context parameters");
+		Assert.assertEquals((int) parameters.getValue().getActivationContext().get(Integer.class, 0), 45, "Simple should receive activation context parameters");
+		Assert.assertEquals((int) parameters.getValue().getActivationContext().get(Integer.class, 1), 24, "Simple should receive activation context parameters");
 
 		verify();
 	}
