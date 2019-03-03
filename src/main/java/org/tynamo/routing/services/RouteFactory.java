@@ -5,7 +5,12 @@ import org.tynamo.routing.Behavior;
 
 public interface RouteFactory {
 
+	Route create(String pathExpression, String canonicalized);
+
 	Route create(String pathExpression, String canonicalized, Behavior behavior);
+
+	@Deprecated
+	Route create(String pathExpression, Class page);
 
 	@Deprecated
 	Route create(String pathExpression, Class page, Behavior behavior);

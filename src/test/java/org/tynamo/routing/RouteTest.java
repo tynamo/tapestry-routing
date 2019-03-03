@@ -64,7 +64,7 @@ public class RouteTest extends RoutingTestCase {
 
 	@Test
 	public void decode_page_render_request() {
-		Route route = routeFactory.create(SimplePage.class.getAnnotation(At.class).value(), SimplePage.class.getSimpleName(), Behavior.DEFAULT);
+		Route route = routeFactory.create(SimplePage.class.getAnnotation(At.class).value(), SimplePage.class.getSimpleName());
 		Request request = mockRequest();
 
 		expect(request.getPath()).andReturn("/foo/45/bar/24").atLeastOnce();

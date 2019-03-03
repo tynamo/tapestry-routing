@@ -11,7 +11,6 @@ import org.apache.tapestry5.ioc.annotations.Primary;
 import org.apache.tapestry5.ioc.services.ApplicationDefaults;
 import org.apache.tapestry5.ioc.services.SymbolProvider;
 import org.tynamo.routing.Route;
-import org.tynamo.routing.Behavior;
 import org.tynamo.routing.services.RouteFactory;
 import org.tynamo.routing.services.RouteProvider;
 
@@ -30,6 +29,6 @@ public class TestsModule {
 	@Primary @Contribute(RouteProvider.class)
 	public static void addRoutes(OrderedConfiguration<Route> configuration, RouteFactory routeFactory) {
 		String canonicalized = "subpackage/Unannotated";
-		configuration.add(canonicalized.toLowerCase(), routeFactory.create("/not/annotated/{0}", canonicalized, Behavior.DEFAULT));
+		configuration.add(canonicalized.toLowerCase(), routeFactory.create("/not/annotated/{0}", canonicalized));
 	}
 }

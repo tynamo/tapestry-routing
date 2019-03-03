@@ -13,14 +13,24 @@ public class RouteFactoryImpl implements RouteFactory {
 	}
 
 	@Override
+	public Route create(String pathExpression, String canonicalized) {
+		return create(pathExpression, canonicalized, Behavior.DEFAULT);
+	}
+
+	@Override
 	public Route create(String pathExpression, String canonicalized, Behavior behavior) {
 		return new Route(pathExpression, canonicalized, behavior);
+	}
+
+	@Override
+	public Route create(String pathExpression, Class page) {
+		return create(pathExpression, page, Behavior.DEFAULT);
 	}
 
 	@Override
 	public Route create(String pathExpression, Class page, Behavior behavior) {
 		String pageName = componentClassResolver.resolvePageClassNameToPageName(page.getName());
 		String canonicalized = componentClassResolver.canonicalizePageName(pageName);
-		return create(pathExpression, canonicalized, behavior);
+		return create(pathExpression, canonicalized);
 	}
 }
