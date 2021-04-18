@@ -1,10 +1,21 @@
 package org.tynamo.routing;
 
+import java.io.IOException;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.tapestry5.http.services.Dispatcher;
+import org.apache.tapestry5.http.services.Request;
+import org.apache.tapestry5.http.services.RequestGlobals;
+import org.apache.tapestry5.http.services.Response;
 import org.apache.tapestry5.internal.EmptyEventContext;
 import org.apache.tapestry5.internal.InternalConstants;
 import org.apache.tapestry5.internal.services.PageRenderDispatcher;
 import org.apache.tapestry5.ioc.RegistryBuilder;
-import org.apache.tapestry5.services.*;
+import org.apache.tapestry5.services.ComponentEventLinkEncoder;
+import org.apache.tapestry5.services.ComponentRequestHandler;
+import org.apache.tapestry5.services.PageRenderRequestParameters;
 import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.testng.Assert;
@@ -18,11 +29,6 @@ import org.tynamo.routing.pages.subpackage.SubPackageMain;
 import org.tynamo.routing.pages.subpackage.SubPage1;
 import org.tynamo.routing.pages.subpackage.UnannotatedPage;
 import org.tynamo.routing.services.RouterDispatcher;
-
-import java.io.IOException;
-import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 public class RouteTest extends RoutingTestCase {

@@ -1,10 +1,13 @@
 package org.tynamo.routing.services;
 
-import org.apache.tapestry5.annotations.Log;
-import org.apache.tapestry5.ioc.annotations.Primary;
-import org.apache.tapestry5.services.*;
-
 import java.io.IOException;
+
+import org.apache.tapestry5.annotations.Log;
+import org.apache.tapestry5.http.services.Dispatcher;
+import org.apache.tapestry5.http.services.Request;
+import org.apache.tapestry5.http.services.Response;
+import org.apache.tapestry5.services.ComponentRequestHandler;
+import org.apache.tapestry5.services.PageRenderRequestParameters;
 
 /**
  * The router dispatcher recognizes incoming requests and transforms them into page render requests.

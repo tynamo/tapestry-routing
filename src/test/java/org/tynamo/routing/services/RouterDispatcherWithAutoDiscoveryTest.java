@@ -1,10 +1,10 @@
 package org.tynamo.routing.services;
 
+import org.apache.tapestry5.http.services.ApplicationGlobals;
 import org.apache.tapestry5.internal.test.PageTesterContext;
 import org.apache.tapestry5.ioc.Registry;
 import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.apache.tapestry5.modules.TapestryModule;
-import org.apache.tapestry5.services.ApplicationGlobals;
 import org.apache.tapestry5.test.TapestryTestCase;
 import org.testng.Assert;
 import org.testng.annotations.Test;

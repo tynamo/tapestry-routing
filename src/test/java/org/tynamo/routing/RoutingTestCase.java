@@ -1,22 +1,34 @@
 package org.tynamo.routing;
 
-import org.apache.tapestry5.LinkSecurity;
+import java.util.Locale;
+
 import org.apache.tapestry5.SymbolConstants;
+import org.apache.tapestry5.http.LinkSecurity;
+import org.apache.tapestry5.http.services.ApplicationGlobals;
+import org.apache.tapestry5.http.services.Request;
+import org.apache.tapestry5.http.services.Response;
 import org.apache.tapestry5.internal.services.RequestSecurityManager;
 import org.apache.tapestry5.internal.test.PageTesterContext;
 import org.apache.tapestry5.ioc.Registry;
 import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.apache.tapestry5.ioc.services.SymbolSource;
 import org.apache.tapestry5.modules.TapestryModule;
-import org.apache.tapestry5.services.*;
+import org.apache.tapestry5.services.ComponentClassResolver;
+import org.apache.tapestry5.services.ContextPathEncoder;
+import org.apache.tapestry5.services.ContextValueEncoder;
+import org.apache.tapestry5.services.PageRenderRequestParameters;
+import org.apache.tapestry5.services.PersistentLocale;
+import org.apache.tapestry5.services.URLEncoder;
 import org.apache.tapestry5.test.TapestryTestCase;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
-import org.tynamo.routing.services.*;
-
-import java.util.Locale;
+import org.tynamo.routing.services.RouteDecoder;
+import org.tynamo.routing.services.RouteFactory;
+import org.tynamo.routing.services.RouteSource;
+import org.tynamo.routing.services.RouterLinkTransformer;
+import org.tynamo.routing.services.RoutingModule;
 
 public abstract class RoutingTestCase extends TapestryTestCase {
 

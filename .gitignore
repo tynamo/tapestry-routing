@@ -1,3 +1,8 @@
 .idea
 *.iml
 target
+tapestry-model-jpa/data
+.project
+.settings/
+.classpath
+/test-output/

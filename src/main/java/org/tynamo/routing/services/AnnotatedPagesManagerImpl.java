@@ -1,24 +1,24 @@
 package org.tynamo.routing.services;
 
-import org.apache.tapestry5.internal.InternalConstants;
-import org.apache.tapestry5.internal.services.PageSource;
-import org.apache.tapestry5.ioc.annotations.PostInjection;
-import org.apache.tapestry5.ioc.annotations.Symbol;
-import org.apache.tapestry5.ioc.internal.util.CollectionFactory;
-import org.apache.tapestry5.ioc.internal.util.Orderer;
-import org.apache.tapestry5.ioc.services.ClassNameLocator;
-import org.apache.tapestry5.services.ComponentClassResolver;
-import org.apache.tapestry5.services.ComponentClasses;
-import org.apache.tapestry5.services.InvalidationEventHub;
-import org.apache.tapestry5.services.InvalidationListener;
-import org.slf4j.Logger;
-import org.tynamo.routing.Route;
-import org.tynamo.routing.RoutingSymbols;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.tapestry5.commons.services.InvalidationEventHub;
+import org.apache.tapestry5.commons.services.InvalidationListener;
+import org.apache.tapestry5.commons.util.CollectionFactory;
+import org.apache.tapestry5.internal.InternalConstants;
+import org.apache.tapestry5.internal.services.PageSource;
+import org.apache.tapestry5.ioc.annotations.ComponentClasses;
+import org.apache.tapestry5.ioc.annotations.PostInjection;
+import org.apache.tapestry5.ioc.annotations.Symbol;
+import org.apache.tapestry5.ioc.internal.util.Orderer;
+import org.apache.tapestry5.ioc.services.ClassNameLocator;
+import org.apache.tapestry5.services.ComponentClassResolver;
+import org.slf4j.Logger;
+import org.tynamo.routing.Route;
+import org.tynamo.routing.RoutingSymbols;
 
 public class AnnotatedPagesManagerImpl implements AnnotatedPagesManager, InvalidationListener {
 

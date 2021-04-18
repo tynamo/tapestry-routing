@@ -1,11 +1,11 @@
 package org.tynamo.routing.services;
 
-import org.apache.tapestry5.ioc.internal.util.CollectionFactory;
-import org.tynamo.routing.Route;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.tapestry5.commons.util.CollectionFactory;
+import org.tynamo.routing.Route;
 
 public class RouteProviderImpl implements RouteProvider {
 
