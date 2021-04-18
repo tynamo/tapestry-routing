@@ -4,7 +4,7 @@
 	<artifactId>tapestry-routing</artifactId>
 	<name>Tapestry Routing</name>
 	<packaging>jar</packaging>
-	<version>0.2.0</version>
+	<version>0.2.1-SNAPSHOT</version>
 	<description>Tapestry Routing allows you to makes pretty, concise and RESTful URLs for your Tapestry pages with no
 		effort.
 	</description>
@@ -19,7 +19,7 @@
 		<connection>scm:git:git@github.com:tynamo/tapestry-routing.git</connection>
 		<developerConnection>scm:git:git@github.com:tynamo/tapestry-routing.git</developerConnection>
 		<url>https://github.com/tynamo/tapestry-routing</url>
-	  <tag>tapestry-routing-0.2.0</tag>
+	  <tag>HEAD</tag>
   </scm>
 
 	<distributionManagement>
